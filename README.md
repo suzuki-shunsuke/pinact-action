@@ -30,13 +30,13 @@ The following permissions may be needed.
 ## Usage
 
 ```yaml
-- uses: suzuki-shunsuke/pinact-action@main
+- uses: suzuki-shunsuke/pinact-action@a60b07ee63e41654915780a3297ff9f5f6b6db63 # v0.1.0
   with:
     github_token: ${{secrets.PAT}}
 ```
 
 ```yaml
-- uses: suzuki-shunsuke/pinact-action@main
+- uses: suzuki-shunsuke/pinact-action@a60b07ee63e41654915780a3297ff9f5f6b6db63 # v0.1.0
   with:
     skip_push: false
 ```
