@@ -18,9 +18,9 @@ In this case, if actions aren't pinned CI fails.
 Install these tools
 
 - [suzuki-shunsuke/pinact](https://github.com/suzuki-shunsuke/pinact#install)
-- [int128/ghcp](https://github.com/int128/ghcp)
+- [int128/ghcp](https://github.com/int128/ghcp): To push a commit to a remote branch
 
-To push a commit to a remote branch, GitHub Access Token is needed.
+This action uses GitHub Access Token too.
 
 The following permissions may be needed.
 
