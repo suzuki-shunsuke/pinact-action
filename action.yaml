@@ -18,7 +18,7 @@ runs:
       run: |
         set -euo pipefail
         if ! git diff --exit-code .github; then
-          echo "::error GitHub Actions aren't pinned."
+        echo "::error :: GitHub Actions aren't pinned."
           exit 1
         fi
 
@@ -29,10 +29,10 @@ runs:
         if git diff --exit-code .github; then
           exit 0
         fi
-        echo "::error GitHub Actions aren't pinned. A commit is pushed automatically to pin GitHub Actions."
+        echo "::error :: GitHub Actions aren't pinned. A commit is pushed automatically to pin GitHub Actions."
 
         if ! ghcp -v; then
-          echo "::error ::int128/ghcp isn't installed. To push a commit, ghcp is required."
+          echo "::error :: int128/ghcp isn't installed. To push a commit, ghcp is required."
           exit 1
         fi
 
