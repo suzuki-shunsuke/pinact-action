@@ -1,0 +1,49 @@
+name: pinact
+description: Pin GitHub Actions and reusable workflows by pinact
+inputs:
+  github_token:
+    required: false
+    default: ${{github.token}}
+  skip_push:
+    required: false
+    default: false
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: pinact run
+
+    - shell: bash
+      if: fromJSON(inputs.skip_push)
+      run: |
+        set -euo pipefail
+        if ! git diff --exit-code .github; then
+          echo "::error GitHub Actions aren't pinned."
+          exit 1
+        fi
+
+    - shell: bash
+      if: "! fromJSON(inputs.skip_push)"
+      run: |
+        set -euo pipefail
+        if git diff --exit-code .github; then
+          exit 0
+        fi
+        echo "::error GitHub Actions aren't pinned. A commit is pushed automatically to pin GitHub Actions."
+
+        if ! ghcp -v; then
+          echo "::error ::int128/ghcp isn't installed. To push a commit, ghcp is required."
+          exit 1
+        fi
+
+        # https://github.com/int128/ghcp
+        branch=${GITHUB_HEAD_REF:-}
+        if [ -z "$branch" ]; then
+          branch=$GITHUB_REF_NAME
+        fi
+        git diff --name-only .github |
+          xargs ghcp commit -r "$GITHUB_REPOSITORY" -b "$branch" \
+            -m "chore(pinact): pin GitHub Actions"
+        exit 1
+      env:
+        GITHUB_TOKEN: ${{inputs.github_token}}
