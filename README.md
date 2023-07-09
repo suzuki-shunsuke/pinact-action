@@ -26,6 +26,7 @@ The following permissions may be needed.
 
 - `pull-requests: write`: To push a commit to a remote branch
 - `contents: read`: To access private actions
+- `workflows: write`: To update GitHub Action workflow files
 
 ## Usage
 
