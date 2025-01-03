@@ -1,7 +1,6 @@
 # pinact-action
 
 GitHub Actions to pin GitHub Actions and reusable workflows by [pinact](https://github.com/suzuki-shunsuke/pinact).
-
 This action fixes files and pushes a commit to a remote branch.
 
 ![image](https://github.com/suzuki-shunsuke/pinact-action/assets/13323303/dd301d04-152c-49ac-bdf3-dbf8293b376f)
@@ -15,10 +14,22 @@ In this case, if actions aren't pinned CI fails.
 
 ## Requirements
 
-Install these tools
+Install these tools.
 
 - [suzuki-shunsuke/pinact](https://github.com/suzuki-shunsuke/pinact#install)
 - [int128/ghcp](https://github.com/int128/ghcp): To push a commit to a remote branch
+
+You can install these tools using [aqua](https://aquaproj.github.io):
+
+```sh
+aqua g -i suzuki-shunsuke/pinact int128/ghcp
+```
+
+```yaml
+- uses: aquaproj/aqua-installer@f13c5d2f0357708d85477aabe50fd3f725528745 # v3.1.0
+  with:
+    aqua_version: v2.41.0
+```
 
 This action uses GitHub Access Token too.
 
