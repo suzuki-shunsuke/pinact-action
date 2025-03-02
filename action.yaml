@@ -72,6 +72,7 @@ runs:
       run: |
         set -euo pipefail
         if echo "$FILES" | xargs -r git diff --exit-code; then
+          echo "::notice:: No changes" >&2
           echo "value=false" >> "$GITHUB_OUTPUT"
         else
           echo "value=true" >> "$GITHUB_OUTPUT"
@@ -89,7 +90,7 @@ runs:
       run: |
         echo "::error:: GitHub Actions aren't pinned. A commit is pushed automatically to pin GitHub Actions."
 
-    - uses: suzuki-shunsuke/commit-action@feat-workflow
+    - uses: suzuki-shunsuke/commit-action@04e7ae80e6b3c584ba8a4d98ab64474963d854eb # v0.0.5
       if: |
         ! fromJSON(inputs.skip_push) && steps.check_changed.outputs.value == 'true'
       with:
