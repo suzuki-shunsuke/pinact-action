@@ -34,10 +34,10 @@ runs:
 
     - run: echo "value=$GITHUB_ACTION_PATH/aqua/aqua.yaml" >> "$GITHUB_OUTPUT"
       id: aqua_config
-      if: steps.pinact_installed.outputs.value == "false"
+      if: steps.pinact_installed.outputs.value == 'false'
       shell: bash
     - uses: aquaproj/aqua-installer@e2d0136abcf70b7a2f6f505720640750557c4b33 # v3.1.1
-      if: steps.pinact_installed.outputs.value == "false"
+      if: steps.pinact_installed.outputs.value == 'false'
       with:
         aqua_version: v2.45.0
         skip_install_aqua: "true"
@@ -75,20 +75,20 @@ runs:
         fi
 
     - shell: bash
-      if: fromJSON(inputs.skip_push) && steps.check_changed.outputs.value == "true"
+      if: fromJSON(inputs.skip_push) && steps.check_changed.outputs.value == 'true'
       run: |
         echo "::error:: GitHub Actions aren't pinned."
         exit 1
 
     - shell: bash
       if: |
-        ! fromJSON(inputs.skip_push) && steps.check_changed.outputs.value == "true"
+        ! fromJSON(inputs.skip_push) && steps.check_changed.outputs.value == 'true'
       run: |
         echo "::error:: GitHub Actions aren't pinned. A commit is pushed automatically to pin GitHub Actions."
 
     - uses: suzuki-shunsuke/commit-action@db754eb4adb44fb5aee5879a3bd08785efec198e # v0.0.4
       if: |
-        ! fromJSON(inputs.skip_push) && steps.check_changed.outputs.value == "true"
+        ! fromJSON(inputs.skip_push) && steps.check_changed.outputs.value == 'true'
       with:
         files: ${{ steps.files.outputs.value }}
         github_token: ${{inputs.github_token}}
