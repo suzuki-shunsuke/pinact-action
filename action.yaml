@@ -2,48 +2,96 @@ name: pinact
 description: Pin GitHub Actions and reusable workflows by pinact
 inputs:
   github_token:
+    description: |
+      GitHub Access Token
+      contents:write - Push commits
     required: false
-    default: ${{github.token}}
+  app_id:
+    description: |
+      GitHub App ID
+    required: false
+  app_private_key:
+    description: |
+      GitHub App Private Key
+    required: false
   skip_push:
     required: false
-    default: false
+    description: |
+      Skip pushing a commit
+    default: "false"
 runs:
   using: composite
   steps:
+    # Install pinact by aqua
     - shell: bash
-      run: pinact run
-
-    - shell: bash
-      if: fromJSON(inputs.skip_push)
+      id: pinact_installed
       run: |
-        set -euo pipefail
-        if ! git diff --exit-code .github; then
-        echo "::error :: GitHub Actions aren't pinned."
-          exit 1
-        fi
-
-    - shell: bash
-      if: "! fromJSON(inputs.skip_push)"
-      run: |
-        set -euo pipefail
-        if git diff --exit-code .github; then
+        if command -v pinact; then
+          echo "value=true"
           exit 0
         fi
-        echo "::error :: GitHub Actions aren't pinned. A commit is pushed automatically to pin GitHub Actions."
+        echo "value=false"
 
-        if ! ghcp -v; then
-          echo "::error :: int128/ghcp isn't installed. To push a commit, ghcp is required."
-          exit 1
-        fi
-
-        # https://github.com/int128/ghcp
-        branch=${GITHUB_HEAD_REF:-}
-        if [ -z "$branch" ]; then
-          branch=$GITHUB_REF_NAME
-        fi
-        git diff --name-only .github |
-          xargs ghcp commit -r "$GITHUB_REPOSITORY" -b "$branch" \
-            -m "chore(pinact): pin GitHub Actions"
-        exit 1
+    - run: echo "value=$GITHUB_ACTION_PATH/aqua/aqua.yaml" >> "$GITHUB_OUTPUT"
+      id: aqua_config
+      if: steps.pinact_installed.outputs.value == "false"
+      shell: bash
+    - uses: aquaproj/aqua-installer@e2d0136abcf70b7a2f6f505720640750557c4b33 # v3.1.1
+      if: steps.pinact_installed.outputs.value == "false"
+      with:
+        aqua_version: v2.45.0
+        skip_install_aqua: "true"
       env:
-        GITHUB_TOKEN: ${{inputs.github_token}}
+        AQUA_CONFIG: ${{ steps.aqua_config.outputs.value }}
+
+    - shell: bash
+      run: pinact -v
+    - shell: bash
+      id: files
+      run: |
+        tempfile=$(mktemp)
+        git ls-files | grep -E '\.github/workflows/[^/]+\.ya?ml$' > "$tempfile"
+        git ls-files | grep -E '^(.*/)?action\.ya?ml?' >> "$tempfile"
+        {
+          echo 'value<<EOF'
+          cat "$tempfile"
+          echo EOF
+        } >> "$GITHUB_OUTPUT"
+    - shell: bash
+      run: echo "$FILES" | xargs -r pinact run
+      env:
+        FILES: ${{ steps.files.outputs.value }}
+
+    - shell: bash
+      id: check_changed
+      env:
+        FILES: ${{ steps.files.outputs.value }}
+      run: |
+        set -euo pipefail
+        if echo "$FILES" | xargs -r git diff --exit-code; then
+          echo "value=false"
+        else
+          echo "value=true"
+        fi
+
+    - shell: bash
+      if: fromJSON(inputs.skip_push) && steps.check_changed.outputs.value == "true"
+      run: |
+        echo "::error:: GitHub Actions aren't pinned."
+        exit 1
+
+    - shell: bash
+      if: |
+        ! fromJSON(inputs.skip_push) && steps.check_changed.outputs.value == "true"
+      run: |
+        echo "::error:: GitHub Actions aren't pinned. A commit is pushed automatically to pin GitHub Actions."
+
+    - uses: suzuki-shunsuke/commit-action@db754eb4adb44fb5aee5879a3bd08785efec198e # v0.0.4
+      if: |
+        ! fromJSON(inputs.skip_push) && steps.check_changed.outputs.value == "true"
+      with:
+        files: ${{ steps.files.outputs.value }}
+        github_token: ${{inputs.github_token}}
+        app_id: ${{inputs.app_id}}
+        app_private_key: ${{inputs.app_private_key}}
+        commit_message: "chore(pinact): pin GitHub Actions"

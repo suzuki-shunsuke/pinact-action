@@ -1,5 +1,7 @@
 # pinact-action
 
+[![License](http://img.shields.io/badge/license-mit-blue.svg?style=flat-square)](https://raw.githubusercontent.com/suzuki-shunsuke/pinact-action/main/LICENSE) | [action.yaml](action.yaml)
+
 GitHub Actions to pin GitHub Actions and reusable workflows by [pinact](https://github.com/suzuki-shunsuke/pinact).
 This action fixes files and pushes a commit to a remote branch.
 
@@ -12,31 +14,11 @@ In this case, if actions aren't pinned CI fails.
 
 ![image](https://github.com/suzuki-shunsuke/pinact-action/assets/13323303/fc3ba9c1-561e-4bfe-8c73-5874bbcae69c)
 
-## Requirements
-
-Install these tools.
-
-- [suzuki-shunsuke/pinact](https://github.com/suzuki-shunsuke/pinact#install)
-- [int128/ghcp](https://github.com/int128/ghcp): To push a commit to a remote branch
-
-You can install these tools using [aqua](https://aquaproj.github.io):
-
-```sh
-aqua g -i suzuki-shunsuke/pinact int128/ghcp
-```
-
-```yaml
-- uses: aquaproj/aqua-installer@f13c5d2f0357708d85477aabe50fd3f725528745 # v3.1.0
-  with:
-    aqua_version: v2.41.0
-```
-
-This action uses GitHub Access Token too.
+This action uses GitHub Access Token.
 
 The following permissions may be needed.
 
-- `pull-requests: write`: To push a commit to a remote branch
-- `contents: read`: To access private actions
+- `contents: write`: To push a commit to a remote branch. If private actions are used, the permission to access those repositories are also required
 - `workflows: write`: To update GitHub Action workflow files
 
 ## Usage
@@ -52,7 +34,3 @@ The following permissions may be needed.
   with:
     skip_push: false
 ```
-
-## LICENSE
-
-[MIT](LICENSE)
