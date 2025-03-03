@@ -1,5 +1,9 @@
 name: pinact
 description: Pin GitHub Actions and reusable workflows by pinact
+author: Shunsuke Suzuki
+branding:
+  icon: git-commit
+  color: blue
 inputs:
   github_token:
     description: |
