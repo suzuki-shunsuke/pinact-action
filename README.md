@@ -50,7 +50,7 @@ jobs:
           persist-credentials: false
 
       - name: Pin actions
-        uses: suzuki-shunsuke/pinact-action@v0.1.1
+        uses: suzuki-shunsuke/pinact-action@56efd2c1e82a807c939fe31dfbeb12fb73258566 # v0.1.1
 ```
 
 By default, this action uses `${{github.token}}` to create a commit.
@@ -60,7 +60,7 @@ You can create a GitHub App installation access token and pass it to pinact-acti
 Then pinact-action creates a GitHub App installation access token with minimum `repositories` and `permissions`.
 
 ```yaml
-- uses: suzuki-shunsuke/pinact-action@v0.1.1
+- uses: suzuki-shunsuke/pinact-action@56efd2c1e82a807c939fe31dfbeb12fb73258566 # v0.1.1
   with:
     app_id: ${{secrets.APP_ID}}
     app_private_key: ${{secrets.APP_PRIVATE_KEY}}
@@ -72,7 +72,7 @@ If you don't want to push a commit, this action can also only validate files.
 In this case, if actions aren't pinned CI fails.
 
 ```yaml
-- uses: suzuki-shunsuke/pinact-action@a60b07ee63e41654915780a3297ff9f5f6b6db63 # v0.1.0
+- uses: suzuki-shunsuke/pinact-action@56efd2c1e82a807c939fe31dfbeb12fb73258566 # v0.1.1
   with:
     skip_push: "true"
 ```
