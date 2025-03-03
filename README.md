@@ -3,7 +3,7 @@
 [![License](http://img.shields.io/badge/license-mit-blue.svg?style=flat-square)](https://raw.githubusercontent.com/suzuki-shunsuke/pinact-action/main/LICENSE) | [action.yaml](action.yaml)
 
 pinact-action is a GitHub Actions to pin GitHub Actions and reusable workflows by [pinact](https://github.com/suzuki-shunsuke/pinact).
-This action fixes files and pushes a commit to a remote branch.
+This action fixes files `\.github/workflows/[^/]+\.ya?ml$` and `^(.*/)?action\.ya?ml?` and pushes a commit to a remote branch.
 
 ![image](https://github.com/suzuki-shunsuke/pinact-action/assets/13323303/dd301d04-152c-49ac-bdf3-dbf8293b376f)
 
