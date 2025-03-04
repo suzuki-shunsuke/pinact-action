@@ -57,7 +57,7 @@ runs:
       run: |
         tempfile=$(mktemp)
         git ls-files | grep -E '\.github/workflows/[^/]+\.ya?ml$' > "$tempfile"
-        git ls-files | grep -E '^(.*/)?action\.ya?ml?' >> "$tempfile"
+        git ls-files | grep -E '^(.*/)?action\.ya?ml?' >> "$tempfile" || true
         {
           echo 'value<<EOF'
           cat "$tempfile"
