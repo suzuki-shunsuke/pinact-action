@@ -94,7 +94,7 @@ runs:
       run: |
         echo "::error:: GitHub Actions aren't pinned. A commit is pushed automatically to pin GitHub Actions."
 
-    - uses: suzuki-shunsuke/commit-action@04e7ae80e6b3c584ba8a4d98ab64474963d854eb # v0.0.5
+    - uses: suzuki-shunsuke/commit-action@9faad521ea6a1e768439ffbe6b25b6cb3fc1b181 # v0.0.6
       if: |
         ! fromJSON(inputs.skip_push) && steps.check_changed.outputs.value == 'true'
       with:
