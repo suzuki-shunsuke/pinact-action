@@ -71,7 +71,7 @@ runs:
           echo "::error:: GitHub Actions aren't pinned."
           exit 1
         fi
-      if: fromJSON(inputs.skip_push) && steps.check_changed.outputs.value == 'true'
+      if: fromJSON(inputs.skip_push)
       env:
         FILES: ${{ steps.files.outputs.value }}
         AQUA_GLOBAL_CONFIG: ${{env.AQUA_GLOBAL_CONFIG}}:${{steps.aqua_config.outputs.value}}
@@ -79,7 +79,7 @@ runs:
     - shell: bash
       run: echo "$FILES" | xargs -r pinact run
       if: |
-        ! fromJSON(inputs.skip_push) && steps.check_changed.outputs.value == 'true'
+        ! fromJSON(inputs.skip_push)
       env:
         FILES: ${{ steps.files.outputs.value }}
         AQUA_GLOBAL_CONFIG: ${{env.AQUA_GLOBAL_CONFIG}}:${{steps.aqua_config.outputs.value}}
