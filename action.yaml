@@ -77,18 +77,21 @@ runs:
         AQUA_GLOBAL_CONFIG: ${{env.AQUA_GLOBAL_CONFIG}}:${{steps.aqua_config.outputs.value}}
 
     - shell: bash
-      run: echo "$FILES" | xargs -r pinact run
-      continue-on-error: true
+      id: pinact
       if: |
         ! fromJSON(inputs.skip_push)
       env:
         FILES: ${{ steps.files.outputs.value }}
         AQUA_GLOBAL_CONFIG: ${{env.AQUA_GLOBAL_CONFIG}}:${{steps.aqua_config.outputs.value}}
+      run: |
+        if ! (echo "$FILES" | xargs -r pinact run); then
+          echo "failed=true" >> "$GITHUB_OUTPUT"
+        fi
 
     - shell: bash
       id: check_changed
       if: |
-        ! fromJSON(inputs.skip_push) && steps.check_changed.outputs.value == 'true'
+        ! fromJSON(inputs.skip_push)
       env:
         FILES: ${{ steps.files.outputs.value }}
       run: |
@@ -115,3 +118,10 @@ runs:
         app_id: ${{inputs.app_id}}
         app_private_key: ${{inputs.app_private_key}}
         commit_message: "chore(pinact): pin GitHub Actions"
+
+    - shell: bash
+      if: |
+        steps.pinact.outputs.failed == 'true'
+      run: |
+        echo "::error:: pinact run failed"
+        exit 1
