@@ -78,6 +78,7 @@ runs:
 
     - shell: bash
       run: echo "$FILES" | xargs -r pinact run
+      continue-on-error: true
       if: |
         ! fromJSON(inputs.skip_push)
       env:
