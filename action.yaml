@@ -85,6 +85,7 @@ runs:
         AQUA_GLOBAL_CONFIG: ${{env.AQUA_GLOBAL_CONFIG}}:${{steps.aqua_config.outputs.value}}
       run: |
         if ! (echo "$FILES" | xargs -r pinact run); then
+          echo "::error:: pinact run failed"
           echo "failed=true" >> "$GITHUB_OUTPUT"
         fi
 
@@ -123,5 +124,5 @@ runs:
       if: |
         steps.pinact.outputs.failed == 'true'
       run: |
-        echo "::error:: pinact run failed"
+        echo "pinact run failed"
         exit 1
