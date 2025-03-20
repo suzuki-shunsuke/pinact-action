@@ -63,14 +63,36 @@ runs:
           cat "$tempfile"
           echo EOF
         } >> "$GITHUB_OUTPUT"
+
     - shell: bash
-      run: echo "$FILES" | xargs -r pinact run
+      run: |
+        set -euo pipefail
+        if ! (echo "$FILES" | xargs -r pinact run --check); then
+          echo "::error:: GitHub Actions aren't pinned."
+          exit 1
+        fi
+      if: fromJSON(inputs.skip_push)
       env:
         FILES: ${{ steps.files.outputs.value }}
         AQUA_GLOBAL_CONFIG: ${{env.AQUA_GLOBAL_CONFIG}}:${{steps.aqua_config.outputs.value}}
 
     - shell: bash
+      id: pinact
+      if: |
+        ! fromJSON(inputs.skip_push)
+      env:
+        FILES: ${{ steps.files.outputs.value }}
+        AQUA_GLOBAL_CONFIG: ${{env.AQUA_GLOBAL_CONFIG}}:${{steps.aqua_config.outputs.value}}
+      run: |
+        if ! (echo "$FILES" | xargs -r pinact run); then
+          echo "::error:: pinact run failed"
+          echo "failed=true" >> "$GITHUB_OUTPUT"
+        fi
+
+    - shell: bash
       id: check_changed
+      if: |
+        ! fromJSON(inputs.skip_push)
       env:
         FILES: ${{ steps.files.outputs.value }}
       run: |
@@ -81,12 +103,6 @@ runs:
         else
           echo "value=true" >> "$GITHUB_OUTPUT"
         fi
-
-    - shell: bash
-      if: fromJSON(inputs.skip_push) && steps.check_changed.outputs.value == 'true'
-      run: |
-        echo "::error:: GitHub Actions aren't pinned."
-        exit 1
 
     - shell: bash
       if: |
@@ -103,3 +119,10 @@ runs:
         app_id: ${{inputs.app_id}}
         app_private_key: ${{inputs.app_private_key}}
         commit_message: "chore(pinact): pin GitHub Actions"
+
+    - shell: bash
+      if: |
+        steps.pinact.outputs.failed == 'true'
+      run: |
+        echo "pinact run failed"
+        exit 1
