@@ -43,7 +43,7 @@ runs:
     - uses: aquaproj/aqua-installer@e2d0136abcf70b7a2f6f505720640750557c4b33 # v3.1.1
       if: steps.pinact_installed.outputs.value == 'false'
       with:
-        aqua_version: v2.48.0
+        aqua_version: v2.48.1
         skip_install_aqua: "true"
       env:
         AQUA_CONFIG: ${{steps.aqua_config.outputs.value}}
