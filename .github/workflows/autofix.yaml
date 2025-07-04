@@ -17,4 +17,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{github.token}}
       - run: aqua upc -prune
-      - uses: suzuki-shunsuke/autofixci-action@a148ca710fd8bf5d9959d5d7604018ce8a77bad0 # v1.3.2-1
+      - uses: autofix-ci/action@635ffb0c9798bd160680f18fd73371e355b85f27 # v1.3.2
