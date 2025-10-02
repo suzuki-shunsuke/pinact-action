@@ -52,6 +52,14 @@ runs:
       run: pinact -v
       env:
         AQUA_GLOBAL_CONFIG: ${{env.AQUA_GLOBAL_CONFIG}}:${{steps.aqua_config.outputs.value}}
+
+    - uses: actions/create-github-app-token@67018539274d69449ef7c02e8e71183d1719ab42 # v2.1.4
+      id: token
+      if: inputs.app_id != ''
+      with:
+        app-id: ${{inputs.app_id}}
+        private-key: ${{inputs.app_private_key}}
+
     - shell: bash
       id: files
       run: |
@@ -75,6 +83,7 @@ runs:
       env:
         FILES: ${{ steps.files.outputs.value }}
         AQUA_GLOBAL_CONFIG: ${{env.AQUA_GLOBAL_CONFIG}}:${{steps.aqua_config.outputs.value}}
+        GITHUB_TOKEN: ${{steps.token.outputs.token || inputs.github_token}}
 
     - shell: bash
       id: pinact
@@ -83,6 +92,7 @@ runs:
       env:
         FILES: ${{ steps.files.outputs.value }}
         AQUA_GLOBAL_CONFIG: ${{env.AQUA_GLOBAL_CONFIG}}:${{steps.aqua_config.outputs.value}}
+        GITHUB_TOKEN: ${{steps.token.outputs.token || inputs.github_token}}
       run: |
         if ! (echo "$FILES" | xargs -r pinact run); then
           echo "::error:: pinact run failed"
