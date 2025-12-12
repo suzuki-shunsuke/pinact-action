@@ -67,7 +67,7 @@ runs:
     - shell: bash
       run: |
         set -euo pipefail
-        if ! (echo "$FILES" | xargs -r pinact run --check); then
+        if ! (echo "$FILES" | xargs -r pinact run --check --diff --review); then
           echo "::error:: GitHub Actions aren't pinned."
           exit 1
         fi
