@@ -5,11 +5,11 @@ permissions: {}
 jobs:
   path-filter:
     # Get changed files to filter jobs
-    timeout-minutes: 10
     outputs:
       renovate-config-validator: ${{steps.changes.outputs.renovate-config-validator}}
       ghalint: ${{steps.changes.outputs.ghalint}}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     permissions: {}
     steps:
       - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
@@ -39,7 +39,12 @@ jobs:
     uses: ./.github/workflows/wc-ghalint.yaml
     permissions: {}
 
-  test:
-    uses: ./.github/workflows/wc-test.yaml
-    needs: path-filter
-    permissions: {}
+  create-pr-branch:
+    uses: ./.github/workflows/wc-create-pr-branch.yaml
+    if: github.event.pull_request.user.login == 'suzuki-shunsuke'
+    permissions:
+      contents: write
+      pull-requests: write
+    with:
+      version: pr/${{github.event.pull_request.number}}
+      pr: ${{github.event.pull_request.number}}

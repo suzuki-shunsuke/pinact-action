@@ -11,10 +11,12 @@ jobs:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
+      - run: npm ci
       - uses: aquaproj/aqua-installer@11dd79b4e498d471a9385aa9fb7f62bb5f52a73c # v4.0.4
         with:
           aqua_version: v2.56.0
-        env:
-          GITHUB_TOKEN: ${{github.token}}
       - run: aqua upc -prune
+        env:
+          AQUA_GITHUB_TOKEN: ${{github.token}}
+      - run: npm run fmt
       - uses: autofix-ci/action@635ffb0c9798bd160680f18fd73371e355b85f27 # v1.3.2
