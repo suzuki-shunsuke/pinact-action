@@ -107,7 +107,7 @@ const run = async () => {
       args.push("--update");
     }
     if (minAge) {
-      args.push("--min-age");
+      args.push("--min-age", minAge);
     }
     if (isVerify) {
       args.push("--verify");
@@ -138,7 +138,7 @@ const run = async () => {
     args.push("--update");
   }
   if (minAge) {
-    args.push("--min-age");
+    args.push("--min-age", minAge);
   }
   if (isVerify) {
     args.push("--verify");
