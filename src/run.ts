@@ -75,11 +75,9 @@ const run = async () => {
 
   // auto-commit mode: run pinact and commit changes
   let pinactFailed = false;
-  const pinactResult = await execPinact(
-    pinactInstalled,
-    ["run", ...files],
-    { ignoreReturnCode: true },
-  );
+  const pinactResult = await execPinact(pinactInstalled, ["run", ...files], {
+    ignoreReturnCode: true,
+  });
   if (pinactResult !== 0) {
     core.error("pinact run failed");
     pinactFailed = true;
