@@ -3,7 +3,7 @@ import * as exec from "@actions/exec";
 import * as github from "@actions/github";
 import * as commit from "@suzuki-shunsuke/commit-ts";
 import * as githubAppToken from "@suzuki-shunsuke/github-app-token";
-import * as aqua_installer from "@aquaproj/aqua-installer";
+import * as aqua from "@aquaproj/aqua-installer";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -42,7 +42,11 @@ const run = async () => {
     // Install aqua if not installed
     const aquaInstalled = await isAquaInstalled();
     if (!aquaInstalled) {
-      await aqua_installer.install();
+      await aqua.action({
+        githubToken: core.getInput("github_token"),
+        version: "v2.56.0",
+        enableAquaInstall: false,
+      });
     }
 
     // Set AQUA_GLOBAL_CONFIG
