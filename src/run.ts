@@ -94,11 +94,15 @@ const run = async () => {
     .split("\n")
     .map((s) => s.trim())
     .filter((s) => s && !s.startsWith("#"));
+  const excludes = core
+    .getInput("excludes")
+    .split("\n")
+    .map((s) => s.trim())
+    .filter((s) => s && !s.startsWith("#"));
 
   if (skipPush) {
     // TODO support pinact run options
     // --review
-    // --exclude
     const args = ["run", "--diff", "--check"];
     if (isUpdate) {
       args.push("--update");
@@ -111,6 +115,9 @@ const run = async () => {
     }
     for (const include of includes) {
       args.push("--include", include);
+    }
+    for (const exclude of excludes) {
+      args.push("--exclude", exclude);
     }
     const result = await execPinact(pinactInstalled, args.concat(files), {
       ignoreReturnCode: true,
@@ -125,7 +132,6 @@ const run = async () => {
   // auto-commit mode: run pinact and commit changes
   // TODO support pinact run options
   // --review
-  // --exclude
   let pinactFailed = false;
   const args = ["run", "--diff"];
   if (isUpdate) {
@@ -139,6 +145,9 @@ const run = async () => {
   }
   for (const include of includes) {
     args.push("--include", include);
+  }
+  for (const exclude of excludes) {
+    args.push("--exclude", exclude);
   }
   const pinactResult = await execPinact(pinactInstalled, args.concat(files), {
     ignoreReturnCode: true,

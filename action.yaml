@@ -48,6 +48,12 @@ inputs:
       pinact run's --include option.
       Each value is newline separated.
       Lines starting with # are ignored.
+  excludes:
+    required: false
+    description: |
+      pinact run's --exclude option.
+      Each value is newline separated.
+      Lines starting with # are ignored.
 runs:
   using: node20
   main: dist/index.js
