@@ -89,11 +89,15 @@ const run = async () => {
   const isUpdate = core.getBooleanInput("update");
   const isVerify = core.getBooleanInput("verify");
   const minAge = core.getInput("min_age");
+  const includes = core
+    .getInput("includes")
+    .split("\n")
+    .map((s) => s.trim())
+    .filter((s) => s && !s.startsWith("#"));
 
   if (skipPush) {
     // TODO support pinact run options
     // --review
-    // --include
     // --exclude
     const args = ["run", "--diff", "--check"];
     if (isUpdate) {
@@ -104,6 +108,9 @@ const run = async () => {
     }
     if (isVerify) {
       args.push("--verify");
+    }
+    for (const include of includes) {
+      args.push("--include", include);
     }
     const result = await execPinact(pinactInstalled, args.concat(files), {
       ignoreReturnCode: true,
@@ -118,7 +125,6 @@ const run = async () => {
   // auto-commit mode: run pinact and commit changes
   // TODO support pinact run options
   // --review
-  // --include
   // --exclude
   let pinactFailed = false;
   const args = ["run", "--diff"];
@@ -130,6 +136,9 @@ const run = async () => {
   }
   if (isVerify) {
     args.push("--verify");
+  }
+  for (const include of includes) {
+    args.push("--include", include);
   }
   const pinactResult = await execPinact(pinactInstalled, args.concat(files), {
     ignoreReturnCode: true,
