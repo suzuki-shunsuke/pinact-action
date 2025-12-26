@@ -48,8 +48,6 @@ const run = async () => {
   // - pinact run (contents:read for actions)
   // - create commit (contents:write for the current repo)
 
-  const env = { ...process.env, GITHUB_TOKEN: token };
-
   // Check if pinact is already installed
   const pinactInstalled = await isPinactInstalled(token);
   if (!pinactInstalled) {
@@ -69,6 +67,8 @@ const run = async () => {
       ? `${currentGlobalConfig}:${aquaConfig}`
       : aquaConfig;
   }
+
+  const env = { ...process.env, GITHUB_TOKEN: token };
 
   // Show pinact version
   await execPinact(pinactInstalled, ["-v"], {
