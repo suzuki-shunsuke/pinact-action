@@ -280,7 +280,7 @@ const getTargetFiles = async (): Promise<string[]> => {
 const hasChanges = async (files: string[]): Promise<boolean> => {
   const result = await exec.getExecOutput(
     "git",
-    ["diff", "--exit-code", ...files],
+    ["diff", "--quiet", ...files],
     {
       ignoreReturnCode: true,
     },
