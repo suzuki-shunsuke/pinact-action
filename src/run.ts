@@ -118,11 +118,10 @@ const run = async () => {
   // auto-commit mode: run pinact and commit changes
   // TODO support pinact run options
   // --review
-  // --diff
   // --include
   // --exclude
   let pinactFailed = false;
-  const args = ["run"];
+  const args = ["run", "--diff"];
   if (isUpdate) {
     args.push("--update");
   }
