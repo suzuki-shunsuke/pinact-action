@@ -20,7 +20,9 @@ You can use the following things:
 
 - :thumbsup: GitHub App Installation access token: We recommend this
 - :thumbsdown: GitHub Personal Access Token: This can't create verified commits
-- :thumbsdown: `${{secrets.GITHUB_TOKEN}}`: This can't trigger new workflow runs.
+- :thumbsdown: `${{secrets.GITHUB_TOKEN}}`
+  - This can't update workflows.
+  - This can't trigger new workflow runs.
 
 https://docs.github.com/en/actions/security-for-github-actions/security-guides/automatic-token-authentication#using-the-github_token-in-a-workflow
 
@@ -31,10 +33,9 @@ https://docs.github.com/en/actions/security-for-github-actions/security-guides/a
 `contents:write` is required.
 Furthermore, if you want to fix workflow files, `workflows:write` is also required.
 If private actions are used, the permission `contents:read` to access those repositories are also required.
+If `review` is enabled, `pull_requests:write` is also required.
 
 ## How To Use
-
-All inputs are optional.
 
 ```yaml
 name: Pinact
@@ -50,20 +51,18 @@ jobs:
           persist-credentials: false
 
       - name: Pin actions
-        uses: suzuki-shunsuke/pinact-action@d735505f3decf76fca3fdbb4c952e5b3eba0ffdd # v0.1.2
+        uses: suzuki-shunsuke/pinact-action@latest
+        with:
+          app_id: ${{vars.APP_ID}}
+          app_private_key: ${{secrets.APP_PRIVATE_KEY}}
 ```
 
-By default, this action uses `${{github.token}}` to create a commit.
-But we recommend GitHub App because `${{github.token}}` doesn't trigger a new workflow run.
-
-You can create a GitHub App installation access token and pass it to pinact-action yourself, but you can also pass a pair of GitHub App ID and private key.
-Then pinact-action creates a GitHub App installation access token with minimum `repositories` and `permissions`.
+### Use PAT
 
 ```yaml
-- uses: suzuki-shunsuke/pinact-action@d735505f3decf76fca3fdbb4c952e5b3eba0ffdd # v0.1.2
-  with:
-    app_id: ${{secrets.APP_ID}}
-    app_private_key: ${{secrets.APP_PRIVATE_KEY}}
+uses: suzuki-shunsuke/pinact-action@latest
+with:
+  github_token: ${{secrets.BOT_GITHUB_TOKEN}}
 ```
 
 ### skip_push
@@ -72,7 +71,27 @@ If you don't want to push a commit, this action can also only validate files.
 In this case, if actions aren't pinned CI fails.
 
 ```yaml
-- uses: suzuki-shunsuke/pinact-action@d735505f3decf76fca3fdbb4c952e5b3eba0ffdd # v0.1.2
+- uses: suzuki-shunsuke/pinact-action@latest
   with:
     skip_push: "true"
+```
+
+### update, verify, review, min_age, includes, excludes
+
+These options are optional.
+
+```yaml
+- uses: suzuki-shunsuke/pinact-action@latest
+  with:
+    skip_push: "true"
+    update: "true"
+    verify: "true"
+    review: "true"
+    min_age: "7"
+    includes: |
+      actions/.*
+      suzuki-shunsuke/.*
+    excludes: |
+      # lines starting with # are ignored
+      actions/checkout
 ```

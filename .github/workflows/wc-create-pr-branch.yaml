@@ -1,0 +1,45 @@
+---
+name: Release (workflow call)
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: Version
+        required: true
+        type: string
+      pr:
+        description: Pull Request Number
+        required: false
+        type: string
+      is_comment:
+        description: If the comment is posted
+        required: false
+        default: false
+        type: boolean
+jobs:
+  create-pr-branch:
+    timeout-minutes: 20
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          persist-credentials: false
+      - run: gh pr checkout "$PR"
+        if: inputs.pr != ''
+        env:
+          GITHUB_TOKEN: ${{github.token}}
+          PR: ${{inputs.pr}}
+      - run: npm ci
+      - run: npm run build
+
+      - uses: suzuki-shunsuke/release-js-action@7586139c29abe68e2bc84395ac4300f20112b764 # v0.1.8
+        with:
+          version: ${{inputs.version}}
+          pr: ${{inputs.pr}}
+          is_comment: ${{inputs.is_comment}}
+
+      # Test
+      - uses: ./

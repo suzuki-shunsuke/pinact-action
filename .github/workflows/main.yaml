@@ -1,0 +1,13 @@
+name: Update the latest branch
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    uses: ./.github/workflows/wc-create-pr-branch.yaml
+    permissions:
+      contents: write
+      pull-requests: write
+    with:
+      version: latest
