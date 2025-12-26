@@ -33,6 +33,15 @@ const revokeToken = async () => {
   await githubAppToken.revoke(appTokenInfo.token);
 };
 
+type Args = {
+  update: boolean;
+  verify: boolean;
+  review: boolean;
+  minAge: string;
+  includes: string[];
+  excludes: string[];
+};
+
 const run = async () => {
   const aquaConfig = path.join(__dirname, "..", "aqua", "aqua.yaml");
 
@@ -86,41 +95,27 @@ const run = async () => {
   }
 
   const skipPush = core.getBooleanInput("skip_push");
-  const isUpdate = core.getBooleanInput("update");
-  const isVerify = core.getBooleanInput("verify");
-  const isReview = core.getBooleanInput("review");
-  const minAge = core.getInput("min_age");
-  const includes = core
-    .getInput("includes")
-    .split("\n")
-    .map((s) => s.trim())
-    .filter((s) => s && !s.startsWith("#"));
-  const excludes = core
-    .getInput("excludes")
-    .split("\n")
-    .map((s) => s.trim())
-    .filter((s) => s && !s.startsWith("#"));
+
+  const flags: Args = {
+    update: core.getBooleanInput("update"),
+    verify: core.getBooleanInput("verify"),
+    review: core.getBooleanInput("review"),
+    minAge: core.getInput("min_age"),
+    includes: core
+      .getInput("includes")
+      .split("\n")
+      .map((s) => s.trim())
+      .filter((s) => s && !s.startsWith("#")),
+    excludes: core
+      .getInput("excludes")
+      .split("\n")
+      .map((s) => s.trim())
+      .filter((s) => s && !s.startsWith("#")),
+  };
 
   if (skipPush) {
     const args = ["run", "--diff", "--check"];
-    if (isUpdate) {
-      args.push("--update");
-    }
-    if (minAge) {
-      args.push("--min-age", minAge);
-    }
-    if (isVerify) {
-      args.push("--verify");
-    }
-    if (isReview) {
-      args.push("--review");
-    }
-    for (const include of includes) {
-      args.push("--include", include);
-    }
-    for (const exclude of excludes) {
-      args.push("--exclude", exclude);
-    }
+    setFlags(args, flags);
     const result = await execPinact(pinactInstalled, args.concat(files), {
       ignoreReturnCode: true,
       env,
@@ -134,24 +129,7 @@ const run = async () => {
   // auto-commit mode: run pinact and commit changes
   let pinactFailed = false;
   const args = ["run", "--diff"];
-  if (isUpdate) {
-    args.push("--update");
-  }
-  if (minAge) {
-    args.push("--min-age", minAge);
-  }
-  if (isVerify) {
-    args.push("--verify");
-  }
-  if (isReview) {
-    args.push("--review");
-  }
-  for (const include of includes) {
-    args.push("--include", include);
-  }
-  for (const exclude of excludes) {
-    args.push("--exclude", exclude);
-  }
+  setFlags(args, flags);
   const pinactResult = await execPinact(pinactInstalled, args.concat(files), {
     ignoreReturnCode: true,
     env,
@@ -208,6 +186,27 @@ const run = async () => {
 
   if (pinactFailed) {
     core.setFailed("pinact run failed");
+  }
+};
+
+const setFlags = (args: string[], flags: Args) => {
+  if (flags.update) {
+    args.push("--update");
+  }
+  if (flags.verify) {
+    args.push("--verify");
+  }
+  if (flags.review) {
+    args.push("--review");
+  }
+  if (flags.minAge) {
+    args.push("--min-age", flags.minAge);
+  }
+  for (const include of flags.includes) {
+    args.push("--include", include);
+  }
+  for (const exclude of flags.excludes) {
+    args.push("--exclude", exclude);
   }
 };
 
