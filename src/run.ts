@@ -86,20 +86,23 @@ const run = async () => {
   }
 
   const skipPush = core.getBooleanInput("skip_push");
+  const isUpdate = core.getBooleanInput("update");
 
   if (skipPush) {
     // TODO support pinact run options
     // --verify
-    // --update
     // --review
     // --min-age
     // --include
     // --exclude
-    const result = await execPinact(
-      pinactInstalled,
-      ["run", "--diff", "--check", ...files],
-      { ignoreReturnCode: true, env },
-    );
+    const args = ["run", "--diff", "--check"];
+    if (isUpdate) {
+      args.push("--update");
+    }
+    const result = await execPinact(pinactInstalled, args.concat(files), {
+      ignoreReturnCode: true,
+      env,
+    });
     if (result !== 0) {
       core.setFailed("GitHub Actions aren't pinned.");
     }
@@ -109,14 +112,17 @@ const run = async () => {
   // auto-commit mode: run pinact and commit changes
   // TODO support pinact run options
   // --verify
-  // --update
   // --review
   // --diff
   // --min-age
   // --include
   // --exclude
   let pinactFailed = false;
-  const pinactResult = await execPinact(pinactInstalled, ["run", ...files], {
+  const args = ["run"];
+  if (isUpdate) {
+    args.push("--update");
+  }
+  const pinactResult = await execPinact(pinactInstalled, args.concat(files), {
     ignoreReturnCode: true,
     env,
   });
