@@ -43,6 +43,11 @@ const run = async () => {
   // Get token for pinact (to access GitHub API)
   const token = await getToken(owner, repo, { contents: "write" });
 
+  // TODO use different tokens
+  // - Install aqua and pinact (no permissions needed)
+  // - pinact run (contents:read for actions)
+  // - create commit (contents:write for the current repo)
+
   const env = { ...process.env, GITHUB_TOKEN: token };
 
   // Check if pinact is already installed
@@ -80,7 +85,13 @@ const run = async () => {
   const skipPush = core.getBooleanInput("skip_push");
 
   if (skipPush) {
-    // skip_push mode: run pinact with --check
+    // TODO support pinact run options
+    // --verify
+    // --update
+    // --review
+    // --min-age
+    // --include
+    // --exclude
     const result = await execPinact(
       pinactInstalled,
       ["run", "--diff", "--check", ...files],
@@ -93,6 +104,14 @@ const run = async () => {
   }
 
   // auto-commit mode: run pinact and commit changes
+  // TODO support pinact run options
+  // --verify
+  // --update
+  // --review
+  // --diff
+  // --min-age
+  // --include
+  // --exclude
   let pinactFailed = false;
   const pinactResult = await execPinact(pinactInstalled, ["run", ...files], {
     ignoreReturnCode: true,
