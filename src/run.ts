@@ -68,12 +68,20 @@ const run = async () => {
 
   const skipPush = core.getBooleanInput("skip_push");
 
+  // Get owner/repo for token
+  const owner = github.context.repo.owner;
+  const repo = github.context.repo.repo;
+
+  // Get token for pinact (to access GitHub API)
+  const token = await getToken(owner, repo, { contents: "write" });
+  const pinactEnv = { GITHUB_TOKEN: token };
+
   if (skipPush) {
     // skip_push mode: run pinact with --check
     const result = await execPinact(
       pinactInstalled,
       ["run", "--diff", "--check", ...files],
-      { ignoreReturnCode: true },
+      { ignoreReturnCode: true, env: { ...process.env, ...pinactEnv } },
     );
     if (result !== 0) {
       core.setFailed("GitHub Actions aren't pinned.");
@@ -85,6 +93,7 @@ const run = async () => {
   let pinactFailed = false;
   const pinactResult = await execPinact(pinactInstalled, ["run", ...files], {
     ignoreReturnCode: true,
+    env: { ...process.env, ...pinactEnv },
   });
   if (pinactResult !== 0) {
     core.error("pinact run failed");
@@ -106,8 +115,6 @@ const run = async () => {
   );
 
   // Create commit
-  const owner = github.context.repo.owner;
-  const repo = github.context.repo.repo;
   const branch =
     process.env.GITHUB_HEAD_REF || process.env.GITHUB_REF_NAME || "";
 
@@ -116,7 +123,6 @@ const run = async () => {
     return;
   }
 
-  const token = await getToken(owner, repo, { contents: "write" });
   const octokit = github.getOctokit(token);
 
   core.info(
