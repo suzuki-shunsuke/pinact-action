@@ -65,6 +65,17 @@ with:
   github_token: ${{secrets.BOT_GITHUB_TOKEN}}
 ```
 
+### Using different GitHub Token for creating commits
+
+```yaml
+uses: suzuki-shunsuke/pinact-action@latest
+with:
+  # For pinact run (contents:read for all actions is required)
+  github_token: ${{secrets.BOT_GITHUB_TOKEN}}
+  # For creating commits (contents:write for the current repository is required)
+  github_token_for_push: ${{secrets.BOT_GITHUB_TOKEN_FOR_PUSH}}
+```
+
 ### skip_push
 
 If you don't want to push a commit, this action can also only validate files.

@@ -162,7 +162,9 @@ const run = async () => {
     return;
   }
 
-  const octokit = github.getOctokit(token);
+  const octokit = github.getOctokit(
+    core.getInput("github_token_for_push") || token,
+  );
 
   core.info(
     `Creating commit: ${JSON.stringify({

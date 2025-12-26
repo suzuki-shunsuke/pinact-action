@@ -16,6 +16,12 @@ inputs:
       GitHub Access Token
       contents:write - Push commits
     required: false
+  github_token_for_push:
+    description: |
+      GitHub Access Token for pushing commits.
+      Falls back to github_token if not specified.
+      contents:write - Push commits
+    required: false
   app_id:
     description: |
       GitHub App ID
