@@ -41,7 +41,10 @@ const run = async () => {
   const repo = github.context.repo.repo;
 
   // Get token for pinact (to access GitHub API)
-  const token = await getToken(owner, repo, { contents: "write" });
+  const token = await getToken(owner, repo, {
+    contents: "write",
+    workflows: "write",
+  });
 
   // TODO use different tokens
   // - Install aqua and pinact (no permissions needed)
