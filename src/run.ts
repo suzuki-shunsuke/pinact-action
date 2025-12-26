@@ -88,6 +88,7 @@ const run = async () => {
   const skipPush = core.getBooleanInput("skip_push");
   const isUpdate = core.getBooleanInput("update");
   const isVerify = core.getBooleanInput("verify");
+  const isReview = core.getBooleanInput("review");
   const minAge = core.getInput("min_age");
   const includes = core
     .getInput("includes")
@@ -101,8 +102,6 @@ const run = async () => {
     .filter((s) => s && !s.startsWith("#"));
 
   if (skipPush) {
-    // TODO support pinact run options
-    // --review
     const args = ["run", "--diff", "--check"];
     if (isUpdate) {
       args.push("--update");
@@ -112,6 +111,9 @@ const run = async () => {
     }
     if (isVerify) {
       args.push("--verify");
+    }
+    if (isReview) {
+      args.push("--review");
     }
     for (const include of includes) {
       args.push("--include", include);
@@ -130,8 +132,6 @@ const run = async () => {
   }
 
   // auto-commit mode: run pinact and commit changes
-  // TODO support pinact run options
-  // --review
   let pinactFailed = false;
   const args = ["run", "--diff"];
   if (isUpdate) {
@@ -142,6 +142,9 @@ const run = async () => {
   }
   if (isVerify) {
     args.push("--verify");
+  }
+  if (isReview) {
+    args.push("--review");
   }
   for (const include of includes) {
     args.push("--include", include);

@@ -34,14 +34,20 @@ inputs:
     description: |
       pinact run's --update option
     default: "false"
-  min_age:
-    required: false
-    description: |
-      pinact run's --min-age option
   verify:
     required: false
     description: |
       pinact run's --verify option
+    default: "false"
+  review:
+    required: false
+    description: |
+      pinact run's --review option
+    default: "false"
+  min_age:
+    required: false
+    description: |
+      pinact run's --min-age option
   includes:
     required: false
     description: |
