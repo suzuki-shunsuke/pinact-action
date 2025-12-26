@@ -128,7 +128,7 @@ const run = async () => {
 
   // auto-commit mode: run pinact and commit changes
   let pinactFailed = false;
-  const args = ["run", "--diff"];
+  const args = ["run", "--diff", "--fix"];
   setFlags(args, flags);
   const pinactResult = await execPinact(pinactInstalled, args.concat(files), {
     ignoreReturnCode: true,
