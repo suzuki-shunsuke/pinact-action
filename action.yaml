@@ -38,6 +38,10 @@ inputs:
     required: false
     description: |
       pinact run's --min-age option
+  verify:
+    required: false
+    description: |
+      pinact run's --verify option
 runs:
   using: node20
   main: dist/index.js
