@@ -36,14 +36,23 @@ const revokeToken = async () => {
 const run = async () => {
   const aquaConfig = path.join(__dirname, "..", "aqua", "aqua.yaml");
 
+  // Get owner/repo for token
+  const owner = github.context.repo.owner;
+  const repo = github.context.repo.repo;
+
+  // Get token for pinact (to access GitHub API)
+  const token = await getToken(owner, repo, { contents: "write" });
+
+  const env = { ...process.env, GITHUB_TOKEN: token };
+
   // Check if pinact is already installed
-  const pinactInstalled = await isPinactInstalled();
+  const pinactInstalled = await isPinactInstalled(token);
   if (!pinactInstalled) {
     // Install aqua if not installed
     const aquaInstalled = await isAquaInstalled();
     if (!aquaInstalled) {
       await aqua.action({
-        githubToken: core.getInput("github_token"),
+        githubToken: token,
         version: "v2.56.0",
         enableAquaInstall: false,
       });
@@ -57,7 +66,9 @@ const run = async () => {
   }
 
   // Show pinact version
-  await execPinact(pinactInstalled, ["-v"]);
+  await execPinact(pinactInstalled, ["-v"], {
+    env,
+  });
 
   // Get target files
   const files = await getTargetFiles();
@@ -68,20 +79,12 @@ const run = async () => {
 
   const skipPush = core.getBooleanInput("skip_push");
 
-  // Get owner/repo for token
-  const owner = github.context.repo.owner;
-  const repo = github.context.repo.repo;
-
-  // Get token for pinact (to access GitHub API)
-  const token = await getToken(owner, repo, { contents: "write" });
-  const pinactEnv = { GITHUB_TOKEN: token };
-
   if (skipPush) {
     // skip_push mode: run pinact with --check
     const result = await execPinact(
       pinactInstalled,
       ["run", "--diff", "--check", ...files],
-      { ignoreReturnCode: true, env: { ...process.env, ...pinactEnv } },
+      { ignoreReturnCode: true, env },
     );
     if (result !== 0) {
       core.setFailed("GitHub Actions aren't pinned.");
@@ -93,7 +96,7 @@ const run = async () => {
   let pinactFailed = false;
   const pinactResult = await execPinact(pinactInstalled, ["run", ...files], {
     ignoreReturnCode: true,
-    env: { ...process.env, ...pinactEnv },
+    env,
   });
   if (pinactResult !== 0) {
     core.error("pinact run failed");
@@ -150,9 +153,12 @@ const run = async () => {
   }
 };
 
-const isPinactInstalled = async (): Promise<boolean> => {
+const isPinactInstalled = async (token: string): Promise<boolean> => {
   try {
-    await exec.getExecOutput("pinact", ["-v"], { silent: true });
+    await exec.getExecOutput("pinact", ["-v"], {
+      silent: true,
+      env: { ...process.env, GITHUB_TOKEN: token },
+    });
     return true;
   } catch {
     return false;
