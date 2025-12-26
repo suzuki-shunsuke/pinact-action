@@ -5,6 +5,12 @@ branding:
   icon: git-commit
   color: blue
 inputs:
+  default_github_token:
+    description: |
+      GitHub Access Token
+      contents:write - Push commits
+    required: false
+    default: ${{github.token}}
   github_token:
     description: |
       GitHub Access Token
