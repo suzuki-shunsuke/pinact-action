@@ -5,6 +5,10 @@ import * as commit from "@suzuki-shunsuke/commit-ts";
 import * as githubAppToken from "@suzuki-shunsuke/github-app-token";
 import * as aqua_installer from "@aquaproj/aqua-installer";
 import * as path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Token info for revocation
 let appTokenInfo: { token: string; expiresAt: string } | null = null;
