@@ -174,10 +174,11 @@ const getTargetFiles = async (): Promise<string[]> => {
 
   // Get workflow files in .github/workflows
   const workflowDir = path.join(".github", "workflows");
-  const workflowResult = await exec.getExecOutput("git", [
-    "ls-files",
-    workflowDir,
-  ]);
+  const workflowResult = await exec.getExecOutput(
+    "git",
+    ["ls-files", workflowDir],
+    { silent: true },
+  );
   for (const line of workflowResult.stdout.split("\n")) {
     const f = line.trim();
     if (!f) continue;
@@ -188,7 +189,9 @@ const getTargetFiles = async (): Promise<string[]> => {
   }
 
   // Get action.yaml or action.yml files
-  const allResult = await exec.getExecOutput("git", ["ls-files"]);
+  const allResult = await exec.getExecOutput("git", ["ls-files"], {
+    silent: true,
+  });
   for (const line of allResult.stdout.split("\n")) {
     const f = line.trim();
     if (!f) continue;
