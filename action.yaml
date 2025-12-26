@@ -34,6 +34,10 @@ inputs:
     description: |
       pinact run's --update option
     default: "false"
+  min_age:
+    required: false
+    description: |
+      pinact run's --min-age option
 runs:
   using: node20
   main: dist/index.js

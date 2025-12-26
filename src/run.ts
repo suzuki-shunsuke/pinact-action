@@ -87,17 +87,20 @@ const run = async () => {
 
   const skipPush = core.getBooleanInput("skip_push");
   const isUpdate = core.getBooleanInput("update");
+  const minAge = core.getBooleanInput("min_age");
 
   if (skipPush) {
     // TODO support pinact run options
     // --verify
     // --review
-    // --min-age
     // --include
     // --exclude
     const args = ["run", "--diff", "--check"];
     if (isUpdate) {
       args.push("--update");
+    }
+    if (minAge) {
+      args.push("--min-age");
     }
     const result = await execPinact(pinactInstalled, args.concat(files), {
       ignoreReturnCode: true,
@@ -114,13 +117,15 @@ const run = async () => {
   // --verify
   // --review
   // --diff
-  // --min-age
   // --include
   // --exclude
   let pinactFailed = false;
   const args = ["run"];
   if (isUpdate) {
     args.push("--update");
+  }
+  if (minAge) {
+    args.push("--min-age");
   }
   const pinactResult = await execPinact(pinactInstalled, args.concat(files), {
     ignoreReturnCode: true,
