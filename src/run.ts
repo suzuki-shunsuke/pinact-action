@@ -258,5 +258,11 @@ const getToken = async (
   if (appPrivateKey) {
     throw new Error("app_id is required when app_private_key is provided");
   }
-  throw new Error("github_token or app_id/app_private_key is required");
+  const defaultToken = core.getInput("default_github_token");
+  if (defaultToken) {
+    return defaultToken;
+  }
+  throw new Error(
+    "github_token, app_id/app_private_key, or default_github_token is required",
+  );
 };
