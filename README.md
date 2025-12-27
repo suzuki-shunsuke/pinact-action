@@ -46,12 +46,12 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
 
       - name: Pin actions
-        uses: suzuki-shunsuke/pinact-action@latest
+        uses: suzuki-shunsuke/pinact-action@78ea6afd1fd0678ef72a7e07efc834fcc5ee9a21 # v1.2.0
         with:
           app_id: ${{vars.APP_ID}}
           app_private_key: ${{secrets.APP_PRIVATE_KEY}}
@@ -60,7 +60,7 @@ jobs:
 ### Use PAT
 
 ```yaml
-uses: suzuki-shunsuke/pinact-action@latest
+uses: suzuki-shunsuke/pinact-action@78ea6afd1fd0678ef72a7e07efc834fcc5ee9a21 # v1.2.0
 with:
   github_token: ${{secrets.BOT_GITHUB_TOKEN}}
 ```
@@ -68,7 +68,7 @@ with:
 ### Using different GitHub Token for creating commits
 
 ```yaml
-uses: suzuki-shunsuke/pinact-action@latest
+uses: suzuki-shunsuke/pinact-action@78ea6afd1fd0678ef72a7e07efc834fcc5ee9a21 # v1.2.0
 with:
   # For pinact run (contents:read for all actions is required)
   github_token: ${{secrets.BOT_GITHUB_TOKEN}}
@@ -82,7 +82,7 @@ If you don't want to push a commit, this action can also only validate files.
 In this case, if actions aren't pinned CI fails.
 
 ```yaml
-- uses: suzuki-shunsuke/pinact-action@latest
+- uses: suzuki-shunsuke/pinact-action@78ea6afd1fd0678ef72a7e07efc834fcc5ee9a21 # v1.2.0
   with:
     skip_push: "true"
 ```
@@ -92,7 +92,7 @@ In this case, if actions aren't pinned CI fails.
 See also https://github.com/reviewdog/reviewdog
 
 ```yaml
-- uses: suzuki-shunsuke/pinact-action@latest
+- uses: suzuki-shunsuke/pinact-action@78ea6afd1fd0678ef72a7e07efc834fcc5ee9a21 # v1.2.0
   with:
     review: "true"
     github_token: ${{secrets.BOT_GITHUB_TOKEN}}
@@ -105,7 +105,7 @@ You can also use the different access token for review:
 `contents:read` and `pull_requests:write` permissions are required.
 
 ```yaml
-- uses: suzuki-shunsuke/pinact-action@latest
+- uses: suzuki-shunsuke/pinact-action@78ea6afd1fd0678ef72a7e07efc834fcc5ee9a21 # v1.2.0
   with:
     review: "true"
     github_token: ${{secrets.BOT_GITHUB_TOKEN}}
@@ -117,7 +117,7 @@ You can also use the different access token for review:
 These options are optional.
 
 ```yaml
-- uses: suzuki-shunsuke/pinact-action@latest
+- uses: suzuki-shunsuke/pinact-action@78ea6afd1fd0678ef72a7e07efc834fcc5ee9a21 # v1.2.0
   with:
     skip_push: "true"
     update: "true"
@@ -130,3 +130,8 @@ These options are optional.
       # lines starting with # are ignored
       actions/checkout
 ```
+
+## Available versions
+
+pinact-action's main branch and feature branches don't work.
+[Please see the document](https://github.com/suzuki-shunsuke/release-js-action/blob/main/docs/available_versions.md).
