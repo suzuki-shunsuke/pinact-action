@@ -48,8 +48,20 @@ inputs:
   review:
     required: false
     description: |
-      pinact run's --review option
+      Enable reviewdog integration to post PR reviews
     default: "false"
+  reviewdog_filter_mode:
+    required: false
+    description: |
+      reviewdog's -filter-mode option
+  reviewdog_fail_level:
+    required: false
+    description: |
+      reviewdog's -fail-level option
+  reviewdog_level:
+    required: false
+    description: |
+      reviewdog's -level option
   min_age:
     required: false
     description: |

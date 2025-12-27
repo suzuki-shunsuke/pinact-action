@@ -141,7 +141,7 @@ const run = async () => {
       const reviewdogEnv = { ...process.env, REVIEWDOG_GITHUB_API_TOKEN: token };
       const reviewdogResult = await execReviewdog(
         reviewdogInstalled,
-        ["-f", "sarif", "-name", "pinact", "-reporter", "github-pr-review"],
+        buildReviewdogArgs(),
         { input: Buffer.from(pinactResult.stdout), env: reviewdogEnv },
       );
       if (reviewdogResult !== 0) {
@@ -185,7 +185,7 @@ const run = async () => {
     const reviewdogEnv = { ...process.env, REVIEWDOG_GITHUB_API_TOKEN: token };
     const reviewdogResult = await execReviewdog(
       reviewdogInstalled,
-      ["-f", "sarif", "-name", "pinact", "-reporter", "github-pr-review"],
+      buildReviewdogArgs(),
       { input: Buffer.from(pinactResult.stdout), env: reviewdogEnv },
     );
     if (reviewdogResult !== 0) {
@@ -272,6 +272,23 @@ const setFlags = (args: string[], flags: Args) => {
   for (const exclude of flags.excludes) {
     args.push("--exclude", exclude);
   }
+};
+
+const buildReviewdogArgs = (): string[] => {
+  const args = ["-f", "sarif", "-name", "pinact", "-reporter", "github-pr-review"];
+  const filterMode = core.getInput("reviewdog_filter_mode");
+  const failLevel = core.getInput("reviewdog_fail_level");
+  const level = core.getInput("reviewdog_level");
+  if (filterMode) {
+    args.push("-filter-mode", filterMode);
+  }
+  if (failLevel) {
+    args.push("-fail-level", failLevel);
+  }
+  if (level) {
+    args.push("-level", level);
+  }
+  return args;
 };
 
 const isPinactInstalled = async (token: string): Promise<boolean> => {
