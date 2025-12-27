@@ -102,6 +102,7 @@ See also https://github.com/reviewdog/reviewdog
 ```
 
 You can also use the different access token for review:
+`contents:read` and `pull_requests:write` permissions are required.
 
 ```yaml
 - uses: suzuki-shunsuke/pinact-action@latest

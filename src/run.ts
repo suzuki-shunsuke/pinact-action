@@ -227,7 +227,9 @@ const runPinactWithReviewdog = async (
   const repo = github.context.repo.repo;
   const reviewToken =
     core.getInput("github_token_for_review") ||
-    (await getToken(owner, { pull_requests: "write" }, [repo]));
+    (await getToken(owner, { pull_requests: "write", contents: "read" }, [
+      repo,
+    ]));
 
   const reviewdogEnv = {
     ...process.env,
