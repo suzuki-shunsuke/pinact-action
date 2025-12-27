@@ -10,27 +10,30 @@ import { fileURLToPath } from "node:url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Token info for revocation
-let appTokenInfo: { token: string; expiresAt: string } | null = null;
+// Token info list for revocation
+const appTokenInfoList: { token: string; expiresAt: string }[] = [];
 
 export const main = async () => {
   try {
     await run();
   } finally {
-    await revokeToken();
+    await revokeTokens();
   }
 };
 
-const revokeToken = async () => {
-  if (!appTokenInfo) {
-    return;
+const revokeTokens = async () => {
+  for (const info of appTokenInfoList) {
+    try {
+      if (githubAppToken.hasExpired(info.expiresAt)) {
+        core.info("GitHub App token has already expired");
+        continue;
+      }
+      core.info("Revoking GitHub App token");
+      await githubAppToken.revoke(info.token);
+    } catch (error) {
+      core.warning(`Failed to revoke token: ${error}`);
+    }
   }
-  if (githubAppToken.hasExpired(appTokenInfo.expiresAt)) {
-    core.info("GitHub App token has already expired");
-    return;
-  }
-  core.info("Revoking GitHub App token");
-  await githubAppToken.revoke(appTokenInfo.token);
 };
 
 type Args = {
@@ -43,11 +46,16 @@ type Args = {
 };
 
 type RunContext = {
-  token: string;
+  pinactToken: string;
   pinactInstalled: boolean;
   reviewdogInstalled: boolean;
   files: string[];
   flags: Args;
+};
+
+const hasWorkflowFiles = (files: string[]): boolean => {
+  // Handle both forward and backslashes for cross-platform compatibility
+  return files.some((f) => /^\.github[/\\]workflows[/\\]/.test(f));
 };
 
 const run = async () => {
@@ -67,32 +75,20 @@ const run = async () => {
 const setup = async (): Promise<RunContext | null> => {
   const aquaConfig = path.join(__dirname, "..", "aqua", "aqua.yaml");
 
-  // Get owner/repo for token
+  // Get owner for token
   const owner = github.context.repo.owner;
-  const repo = github.context.repo.repo;
 
-  const permissions: githubAppToken.Permissions = {
-    contents: "write",
-    workflows: "write",
-  };
-  if (
-    core.getBooleanInput("review") &&
-    !core.getInput("github_token_for_review")
-  ) {
-    permissions.pull_requests = "write";
-  }
-
-  // Get token for pinact (to access GitHub API)
-  const token = await getToken(owner, repo, permissions);
+  // Get token for pinact run (contents:read, no repository restriction)
+  const pinactToken = await getToken(owner, { contents: "read" });
 
   // Check if pinact is already installed
-  const pinactInstalled = await isPinactInstalled(token);
+  const pinactInstalled = await isPinactInstalled(pinactToken);
   if (!pinactInstalled) {
     // Install aqua if not installed
     const aquaInstalled = await isAquaInstalled();
     if (!aquaInstalled) {
       await aqua.action({
-        githubToken: token,
+        githubToken: pinactToken,
         version: "v2.56.0",
         enableAquaInstall: false,
       });
@@ -107,7 +103,7 @@ const setup = async (): Promise<RunContext | null> => {
 
   // Show pinact version
   await execPinact(pinactInstalled, ["-v"], {
-    env: { ...process.env, GITHUB_TOKEN: token },
+    env: { ...process.env, GITHUB_TOKEN: pinactToken },
   });
 
   // Get target files
@@ -140,11 +136,11 @@ const setup = async (): Promise<RunContext | null> => {
     reviewdogInstalled = await isReviewdogInstalled();
   }
 
-  return { token, pinactInstalled, reviewdogInstalled, files, flags };
+  return { pinactToken, pinactInstalled, reviewdogInstalled, files, flags };
 };
 
 const runSkipPushMode = async (ctx: RunContext): Promise<void> => {
-  const { token, pinactInstalled, files, flags } = ctx;
+  const { pinactToken, pinactInstalled, files, flags } = ctx;
 
   const args = ["run", "--diff"];
   if (flags.review) {
@@ -159,7 +155,7 @@ const runSkipPushMode = async (ctx: RunContext): Promise<void> => {
   } else {
     const result = await execPinact(pinactInstalled, args.concat(files), {
       ignoreReturnCode: true,
-      env: { ...process.env, GITHUB_TOKEN: token },
+      env: { ...process.env, GITHUB_TOKEN: pinactToken },
     });
     if (result !== 0) {
       throw new Error("GitHub Actions aren't pinned.");
@@ -168,23 +164,38 @@ const runSkipPushMode = async (ctx: RunContext): Promise<void> => {
 };
 
 const runAutoCommitMode = async (ctx: RunContext): Promise<void> => {
-  const { token, pinactInstalled, files, flags } = ctx;
+  const { pinactToken, pinactInstalled, files, flags } = ctx;
 
+  // Always use --fix in auto commit mode, use sarif format when review is enabled
   const args = ["run", "--diff", "--fix"];
   if (flags.review) {
     args.push("--format", "sarif");
   }
   setFlags(args, flags);
 
+  // Run pinact (capture output if review is enabled for later reviewdog use)
+  let pinactOutput: exec.ExecOutput | null = null;
   let pinactFailed = false;
+
   if (flags.review) {
-    await runPinactWithReviewdog(ctx, args);
+    pinactOutput = await getExecOutputPinact(
+      pinactInstalled,
+      args.concat(files),
+      {
+        ignoreReturnCode: true,
+        env: { ...process.env, GITHUB_TOKEN: pinactToken },
+      },
+    );
+    if (pinactOutput.exitCode !== 0) {
+      core.error("pinact run failed");
+      pinactFailed = true;
+    }
   } else {
-    const pinactResult = await execPinact(pinactInstalled, args.concat(files), {
+    const result = await execPinact(pinactInstalled, args.concat(files), {
       ignoreReturnCode: true,
-      env: { ...process.env, GITHUB_TOKEN: token },
+      env: { ...process.env, GITHUB_TOKEN: pinactToken },
     });
-    if (pinactResult !== 0) {
+    if (result !== 0) {
       core.error("pinact run failed");
       pinactFailed = true;
     }
@@ -192,19 +203,26 @@ const runAutoCommitMode = async (ctx: RunContext): Promise<void> => {
 
   // Check if files have changed
   const changed = await hasChanges(files);
-  if (!changed) {
-    core.notice("No changes");
+
+  if (changed) {
+    // Files changed → commit and push, don't run reviewdog
+    core.error(
+      "GitHub Actions aren't pinned. A commit is pushed automatically to pin GitHub Actions.",
+    );
+    await createCommit(files);
     if (pinactFailed) {
       throw new Error("pinact run failed");
     }
     return;
   }
 
-  core.error(
-    "GitHub Actions aren't pinned. A commit is pushed automatically to pin GitHub Actions.",
-  );
+  // No changes
+  core.notice("No changes");
 
-  await createCommit(token, files);
+  // Run reviewdog only when no changes and review is enabled
+  if (flags.review && pinactOutput) {
+    await runReviewdog(ctx, pinactOutput.stdout);
+  }
 
   if (pinactFailed) {
     throw new Error("pinact run failed");
@@ -215,33 +233,49 @@ const runPinactWithReviewdog = async (
   ctx: RunContext,
   args: string[],
 ): Promise<void> => {
-  const { token, pinactInstalled, reviewdogInstalled, files } = ctx;
+  const { pinactToken, pinactInstalled, files } = ctx;
 
   const pinactResult = await getExecOutputPinact(
     pinactInstalled,
     args.concat(files),
     {
       ignoreReturnCode: true,
-      env: { ...process.env, GITHUB_TOKEN: token },
+      env: { ...process.env, GITHUB_TOKEN: pinactToken },
     },
   );
 
+  await runReviewdog(ctx, pinactResult.stdout);
+};
+
+const runReviewdog = async (
+  ctx: RunContext,
+  pinactStdout: string,
+): Promise<void> => {
+  const { reviewdogInstalled } = ctx;
+
+  const owner = github.context.repo.owner;
+  const repo = github.context.repo.repo;
+  const reviewToken =
+    core.getInput("github_token_for_review") ||
+    (await getToken(owner, { pull_requests: "write", contents: "read" }, [
+      repo,
+    ]));
+
   const reviewdogEnv = {
     ...process.env,
-    REVIEWDOG_GITHUB_API_TOKEN:
-      core.getInput("github_token_for_review") || token,
+    REVIEWDOG_GITHUB_API_TOKEN: reviewToken,
   };
   const reviewdogResult = await execReviewdog(
     reviewdogInstalled,
     buildReviewdogArgs(),
-    { input: Buffer.from(pinactResult.stdout), env: reviewdogEnv },
+    { input: Buffer.from(pinactStdout), env: reviewdogEnv },
   );
   if (reviewdogResult !== 0) {
     throw new Error("reviewdog failed");
   }
 };
 
-const createCommit = async (token: string, files: string[]): Promise<void> => {
+const createCommit = async (files: string[]): Promise<void> => {
   const owner = github.context.repo.owner;
   const repo = github.context.repo.repo;
   const branch =
@@ -251,9 +285,18 @@ const createCommit = async (token: string, files: string[]): Promise<void> => {
     throw new Error("Could not determine branch");
   }
 
-  const octokit = github.getOctokit(
-    core.getInput("github_token_for_push") || token,
-  );
+  // Determine permissions based on files
+  const permissions: githubAppToken.Permissions = { contents: "write" };
+  if (hasWorkflowFiles(files)) {
+    permissions.workflows = "write";
+  }
+
+  // Get push token
+  const pushToken =
+    core.getInput("github_token_for_push") ||
+    (await getToken(owner, permissions, [repo]));
+
+  const octokit = github.getOctokit(pushToken);
 
   core.info(
     `Creating commit: ${JSON.stringify({
@@ -430,8 +473,8 @@ const hasChanges = async (files: string[]): Promise<boolean> => {
 
 const getToken = async (
   owner: string,
-  repo: string,
   permissions: githubAppToken.Permissions,
+  repositories?: string[],
 ): Promise<string> => {
   const token = core.getInput("github_token");
   if (token) {
@@ -446,22 +489,31 @@ const getToken = async (
     core.info(
       `Creating GitHub App token: ${JSON.stringify({
         owner,
-        repositories: [repo],
+        repositories,
         permissions,
       })}`,
     );
-    const appToken = await githubAppToken.create({
+    const options: {
+      appId: string;
+      privateKey: string;
+      owner: string;
+      permissions: githubAppToken.Permissions;
+      repositories?: string[];
+    } = {
       appId,
       privateKey: appPrivateKey,
       owner,
-      repositories: [repo],
       permissions,
-    });
+    };
+    if (repositories) {
+      options.repositories = repositories;
+    }
+    const appToken = await githubAppToken.create(options);
     // Save token info for revocation in finally block
-    appTokenInfo = {
+    appTokenInfoList.push({
       token: appToken.token,
       expiresAt: appToken.expiresAt,
-    };
+    });
     return appToken.token;
   }
   if (appPrivateKey) {
