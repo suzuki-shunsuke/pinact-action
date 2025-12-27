@@ -48,8 +48,27 @@ inputs:
   review:
     required: false
     description: |
-      pinact run's --review option
+      Enable reviewdog integration to post PR reviews
     default: "false"
+  github_token_for_review:
+    required: false
+    description: |
+      GitHub Access Token for reviewdog.
+      Falls back to github_token if not specified.
+      pull_requests:write - Post PR reviews
+  reviewdog_filter_mode:
+    required: false
+    description: |
+      reviewdog's -filter-mode option
+  reviewdog_fail_level:
+    required: false
+    default: error
+    description: |
+      reviewdog's -fail-level option
+  reviewdog_level:
+    required: false
+    description: |
+      reviewdog's -level option
   min_age:
     required: false
     description: |

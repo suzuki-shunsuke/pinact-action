@@ -42,23 +42,48 @@ type Args = {
   excludes: string[];
 };
 
+type RunContext = {
+  token: string;
+  pinactInstalled: boolean;
+  reviewdogInstalled: boolean;
+  files: string[];
+  flags: Args;
+};
+
 const run = async () => {
+  const ctx = await setup();
+  if (!ctx) {
+    return;
+  }
+
+  const skipPush = core.getBooleanInput("skip_push");
+  if (skipPush) {
+    await runSkipPushMode(ctx);
+  } else {
+    await runAutoCommitMode(ctx);
+  }
+};
+
+const setup = async (): Promise<RunContext | null> => {
   const aquaConfig = path.join(__dirname, "..", "aqua", "aqua.yaml");
 
   // Get owner/repo for token
   const owner = github.context.repo.owner;
   const repo = github.context.repo.repo;
 
-  // Get token for pinact (to access GitHub API)
-  const token = await getToken(owner, repo, {
+  const permissions: githubAppToken.Permissions = {
     contents: "write",
     workflows: "write",
-  });
+  };
+  if (
+    core.getBooleanInput("review") &&
+    !core.getInput("github_token_for_review")
+  ) {
+    permissions.pull_requests = "write";
+  }
 
-  // TODO use different tokens
-  // - Install aqua and pinact (no permissions needed)
-  // - pinact run (contents:read for actions)
-  // - create commit (contents:write for the current repo)
+  // Get token for pinact (to access GitHub API)
+  const token = await getToken(owner, repo, permissions);
 
   // Check if pinact is already installed
   const pinactInstalled = await isPinactInstalled(token);
@@ -80,21 +105,17 @@ const run = async () => {
       : aquaConfig;
   }
 
-  const env = { ...process.env, GITHUB_TOKEN: token };
-
   // Show pinact version
   await execPinact(pinactInstalled, ["-v"], {
-    env,
+    env: { ...process.env, GITHUB_TOKEN: token },
   });
 
   // Get target files
   const files = await getTargetFiles();
   if (files.length === 0) {
     core.notice("No target files found");
-    return;
+    return null;
   }
-
-  const skipPush = core.getBooleanInput("skip_push");
 
   const flags: Args = {
     update: core.getBooleanInput("update"),
@@ -113,30 +134,60 @@ const run = async () => {
       .filter((s) => s && !s.startsWith("#")),
   };
 
-  if (skipPush) {
-    const args = ["run", "--diff", "--check"];
-    setFlags(args, flags);
-    const result = await execPinact(pinactInstalled, args.concat(files), {
-      ignoreReturnCode: true,
-      env,
-    });
-    if (result !== 0) {
-      core.setFailed("GitHub Actions aren't pinned.");
-    }
-    return;
+  // Check if reviewdog is installed when review is enabled
+  let reviewdogInstalled = false;
+  if (flags.review) {
+    reviewdogInstalled = await isReviewdogInstalled();
   }
 
-  // auto-commit mode: run pinact and commit changes
-  let pinactFailed = false;
-  const args = ["run", "--diff", "--fix"];
+  return { token, pinactInstalled, reviewdogInstalled, files, flags };
+};
+
+const runSkipPushMode = async (ctx: RunContext): Promise<void> => {
+  const { token, pinactInstalled, files, flags } = ctx;
+
+  const args = ["run", "--diff"];
+  if (flags.review) {
+    args.push("--format", "sarif");
+  } else {
+    args.push("--check");
+  }
   setFlags(args, flags);
-  const pinactResult = await execPinact(pinactInstalled, args.concat(files), {
-    ignoreReturnCode: true,
-    env,
-  });
-  if (pinactResult !== 0) {
-    core.error("pinact run failed");
-    pinactFailed = true;
+
+  if (flags.review) {
+    await runPinactWithReviewdog(ctx, args);
+  } else {
+    const result = await execPinact(pinactInstalled, args.concat(files), {
+      ignoreReturnCode: true,
+      env: { ...process.env, GITHUB_TOKEN: token },
+    });
+    if (result !== 0) {
+      throw new Error("GitHub Actions aren't pinned.");
+    }
+  }
+};
+
+const runAutoCommitMode = async (ctx: RunContext): Promise<void> => {
+  const { token, pinactInstalled, files, flags } = ctx;
+
+  const args = ["run", "--diff", "--fix"];
+  if (flags.review) {
+    args.push("--format", "sarif");
+  }
+  setFlags(args, flags);
+
+  let pinactFailed = false;
+  if (flags.review) {
+    await runPinactWithReviewdog(ctx, args);
+  } else {
+    const pinactResult = await execPinact(pinactInstalled, args.concat(files), {
+      ignoreReturnCode: true,
+      env: { ...process.env, GITHUB_TOKEN: token },
+    });
+    if (pinactResult !== 0) {
+      core.error("pinact run failed");
+      pinactFailed = true;
+    }
   }
 
   // Check if files have changed
@@ -144,7 +195,7 @@ const run = async () => {
   if (!changed) {
     core.notice("No changes");
     if (pinactFailed) {
-      core.setFailed("pinact run failed");
+      throw new Error("pinact run failed");
     }
     return;
   }
@@ -153,13 +204,51 @@ const run = async () => {
     "GitHub Actions aren't pinned. A commit is pushed automatically to pin GitHub Actions.",
   );
 
-  // Create commit
+  await createCommit(token, files);
+
+  if (pinactFailed) {
+    throw new Error("pinact run failed");
+  }
+};
+
+const runPinactWithReviewdog = async (
+  ctx: RunContext,
+  args: string[],
+): Promise<void> => {
+  const { token, pinactInstalled, reviewdogInstalled, files } = ctx;
+
+  const pinactResult = await getExecOutputPinact(
+    pinactInstalled,
+    args.concat(files),
+    {
+      ignoreReturnCode: true,
+      env: { ...process.env, GITHUB_TOKEN: token },
+    },
+  );
+
+  const reviewdogEnv = {
+    ...process.env,
+    REVIEWDOG_GITHUB_API_TOKEN:
+      core.getInput("github_token_for_review") || token,
+  };
+  const reviewdogResult = await execReviewdog(
+    reviewdogInstalled,
+    buildReviewdogArgs(),
+    { input: Buffer.from(pinactResult.stdout), env: reviewdogEnv },
+  );
+  if (reviewdogResult !== 0) {
+    throw new Error("reviewdog failed");
+  }
+};
+
+const createCommit = async (token: string, files: string[]): Promise<void> => {
+  const owner = github.context.repo.owner;
+  const repo = github.context.repo.repo;
   const branch =
     process.env.GITHUB_HEAD_REF || process.env.GITHUB_REF_NAME || "";
 
   if (!branch) {
-    core.setFailed("Could not determine branch");
-    return;
+    throw new Error("Could not determine branch");
   }
 
   const octokit = github.getOctokit(
@@ -185,10 +274,6 @@ const run = async () => {
     deleteIfNotExist: true,
     logger: { info: core.info },
   });
-
-  if (pinactFailed) {
-    core.setFailed("pinact run failed");
-  }
 };
 
 const setFlags = (args: string[], flags: Args) => {
@@ -198,9 +283,7 @@ const setFlags = (args: string[], flags: Args) => {
   if (flags.verify) {
     args.push("--verify");
   }
-  if (flags.review) {
-    args.push("--review");
-  }
+  // Note: --review is not added here; reviewdog is used instead when flags.review is true
   if (flags.minAge) {
     args.push("--min-age", flags.minAge);
   }
@@ -210,6 +293,30 @@ const setFlags = (args: string[], flags: Args) => {
   for (const exclude of flags.excludes) {
     args.push("--exclude", exclude);
   }
+};
+
+const buildReviewdogArgs = (): string[] => {
+  const args = [
+    "-f",
+    "sarif",
+    "-name",
+    "pinact",
+    "-reporter",
+    "github-pr-review",
+  ];
+  const filterMode = core.getInput("reviewdog_filter_mode");
+  const failLevel = core.getInput("reviewdog_fail_level");
+  const level = core.getInput("reviewdog_level");
+  if (filterMode) {
+    args.push("-filter-mode", filterMode);
+  }
+  if (failLevel) {
+    args.push("-fail-level", failLevel);
+  }
+  if (level) {
+    args.push("-level", level);
+  }
+  return args;
 };
 
 const isPinactInstalled = async (token: string): Promise<boolean> => {
@@ -242,6 +349,37 @@ const execPinact = async (
     return exec.exec("pinact", args, options);
   }
   return exec.exec("aqua", ["exec", "--", "pinact", ...args], options);
+};
+
+const isReviewdogInstalled = async (): Promise<boolean> => {
+  try {
+    await exec.getExecOutput("reviewdog", ["-version"], { silent: true });
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const getExecOutputPinact = async (
+  pinactInstalled: boolean,
+  args: string[],
+  options?: exec.ExecOptions,
+): Promise<exec.ExecOutput> => {
+  if (pinactInstalled) {
+    return exec.getExecOutput("pinact", args, options);
+  }
+  return exec.getExecOutput("aqua", ["exec", "--", "pinact", ...args], options);
+};
+
+const execReviewdog = async (
+  reviewdogInstalled: boolean,
+  args: string[],
+  options?: exec.ExecOptions,
+): Promise<number> => {
+  if (reviewdogInstalled) {
+    return exec.exec("reviewdog", args, options);
+  }
+  return exec.exec("aqua", ["exec", "--", "reviewdog", ...args], options);
 };
 
 const getTargetFiles = async (): Promise<string[]> => {

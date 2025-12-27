@@ -87,7 +87,31 @@ In this case, if actions aren't pinned CI fails.
     skip_push: "true"
 ```
 
-### update, verify, review, min_age, includes, excludes
+### Reviewdog
+
+See also https://github.com/reviewdog/reviewdog
+
+```yaml
+- uses: suzuki-shunsuke/pinact-action@latest
+  with:
+    review: "true"
+    github_token: ${{secrets.BOT_GITHUB_TOKEN}}
+    # Optional
+    reviewdog_fail_level: none # The default is "error"
+    reviewdog_filter_mode: nofilter # The default is "added"
+```
+
+You can also use the different access token for review:
+
+```yaml
+- uses: suzuki-shunsuke/pinact-action@latest
+  with:
+    review: "true"
+    github_token: ${{secrets.BOT_GITHUB_TOKEN}}
+    github_token_for_review: ${{secrets.BOT_GITHUB_TOKEN_FOR_REVIEW}}
+```
+
+### update, verify, min_age, includes, excludes
 
 These options are optional.
 
@@ -97,7 +121,6 @@ These options are optional.
     skip_push: "true"
     update: "true"
     verify: "true"
-    review: "true"
     min_age: "7"
     includes: |
       actions/.*
