@@ -50,6 +50,12 @@ inputs:
     description: |
       Enable reviewdog integration to post PR reviews
     default: "false"
+  github_token_for_review:
+    required: false
+    description: |
+      GitHub Access Token for reviewdog.
+      Falls back to github_token if not specified.
+      pull_requests:write - Post PR reviews
   reviewdog_filter_mode:
     required: false
     description: |

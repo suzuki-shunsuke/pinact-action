@@ -140,7 +140,8 @@ const run = async () => {
       );
       const reviewdogEnv = {
         ...process.env,
-        REVIEWDOG_GITHUB_API_TOKEN: token,
+        REVIEWDOG_GITHUB_API_TOKEN:
+          core.getInput("github_token_for_review") || token,
       };
       const reviewdogResult = await execReviewdog(
         reviewdogInstalled,
@@ -185,7 +186,11 @@ const run = async () => {
       core.error("pinact run failed");
       pinactFailed = true;
     }
-    const reviewdogEnv = { ...process.env, REVIEWDOG_GITHUB_API_TOKEN: token };
+    const reviewdogEnv = {
+      ...process.env,
+      REVIEWDOG_GITHUB_API_TOKEN:
+        core.getInput("github_token_for_review") || token,
+    };
     const reviewdogResult = await execReviewdog(
       reviewdogInstalled,
       buildReviewdogArgs(),
