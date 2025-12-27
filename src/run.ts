@@ -138,7 +138,10 @@ const run = async () => {
           env,
         },
       );
-      const reviewdogEnv = { ...process.env, REVIEWDOG_GITHUB_API_TOKEN: token };
+      const reviewdogEnv = {
+        ...process.env,
+        REVIEWDOG_GITHUB_API_TOKEN: token,
+      };
       const reviewdogResult = await execReviewdog(
         reviewdogInstalled,
         buildReviewdogArgs(),
@@ -275,7 +278,14 @@ const setFlags = (args: string[], flags: Args) => {
 };
 
 const buildReviewdogArgs = (): string[] => {
-  const args = ["-f", "sarif", "-name", "pinact", "-reporter", "github-pr-review"];
+  const args = [
+    "-f",
+    "sarif",
+    "-name",
+    "pinact",
+    "-reporter",
+    "github-pr-review",
+  ];
   const filterMode = core.getInput("reviewdog_filter_mode");
   const failLevel = core.getInput("reviewdog_fail_level");
   const level = core.getInput("reviewdog_level");
