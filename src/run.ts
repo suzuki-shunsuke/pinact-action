@@ -166,21 +166,36 @@ const runSkipPushMode = async (ctx: RunContext): Promise<void> => {
 const runAutoCommitMode = async (ctx: RunContext): Promise<void> => {
   const { pinactToken, pinactInstalled, files, flags } = ctx;
 
+  // Always use --fix in auto commit mode, use sarif format when review is enabled
   const args = ["run", "--diff", "--fix"];
   if (flags.review) {
     args.push("--format", "sarif");
   }
   setFlags(args, flags);
 
+  // Run pinact (capture output if review is enabled for later reviewdog use)
+  let pinactOutput: exec.ExecOutput | null = null;
   let pinactFailed = false;
+
   if (flags.review) {
-    await runPinactWithReviewdog(ctx, args);
+    pinactOutput = await getExecOutputPinact(
+      pinactInstalled,
+      args.concat(files),
+      {
+        ignoreReturnCode: true,
+        env: { ...process.env, GITHUB_TOKEN: pinactToken },
+      },
+    );
+    if (pinactOutput.exitCode !== 0) {
+      core.error("pinact run failed");
+      pinactFailed = true;
+    }
   } else {
-    const pinactResult = await execPinact(pinactInstalled, args.concat(files), {
+    const result = await execPinact(pinactInstalled, args.concat(files), {
       ignoreReturnCode: true,
       env: { ...process.env, GITHUB_TOKEN: pinactToken },
     });
-    if (pinactResult !== 0) {
+    if (result !== 0) {
       core.error("pinact run failed");
       pinactFailed = true;
     }
@@ -188,19 +203,26 @@ const runAutoCommitMode = async (ctx: RunContext): Promise<void> => {
 
   // Check if files have changed
   const changed = await hasChanges(files);
-  if (!changed) {
-    core.notice("No changes");
+
+  if (changed) {
+    // Files changed → commit and push, don't run reviewdog
+    core.error(
+      "GitHub Actions aren't pinned. A commit is pushed automatically to pin GitHub Actions.",
+    );
+    await createCommit(files);
     if (pinactFailed) {
       throw new Error("pinact run failed");
     }
     return;
   }
 
-  core.error(
-    "GitHub Actions aren't pinned. A commit is pushed automatically to pin GitHub Actions.",
-  );
+  // No changes
+  core.notice("No changes");
 
-  await createCommit(files);
+  // Run reviewdog only when no changes and review is enabled
+  if (flags.review && pinactOutput) {
+    await runReviewdog(ctx, pinactOutput.stdout);
+  }
 
   if (pinactFailed) {
     throw new Error("pinact run failed");
@@ -211,7 +233,7 @@ const runPinactWithReviewdog = async (
   ctx: RunContext,
   args: string[],
 ): Promise<void> => {
-  const { pinactToken, pinactInstalled, reviewdogInstalled, files } = ctx;
+  const { pinactToken, pinactInstalled, files } = ctx;
 
   const pinactResult = await getExecOutputPinact(
     pinactInstalled,
@@ -222,7 +244,15 @@ const runPinactWithReviewdog = async (
     },
   );
 
-  // Get review token
+  await runReviewdog(ctx, pinactResult.stdout);
+};
+
+const runReviewdog = async (
+  ctx: RunContext,
+  pinactStdout: string,
+): Promise<void> => {
+  const { reviewdogInstalled } = ctx;
+
   const owner = github.context.repo.owner;
   const repo = github.context.repo.repo;
   const reviewToken =
@@ -238,7 +268,7 @@ const runPinactWithReviewdog = async (
   const reviewdogResult = await execReviewdog(
     reviewdogInstalled,
     buildReviewdogArgs(),
-    { input: Buffer.from(pinactResult.stdout), env: reviewdogEnv },
+    { input: Buffer.from(pinactStdout), env: reviewdogEnv },
   );
   if (reviewdogResult !== 0) {
     throw new Error("reviewdog failed");
