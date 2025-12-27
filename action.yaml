@@ -62,6 +62,7 @@ inputs:
       reviewdog's -filter-mode option
   reviewdog_fail_level:
     required: false
+    default: error
     description: |
       reviewdog's -fail-level option
   reviewdog_level:
