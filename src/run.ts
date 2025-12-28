@@ -289,12 +289,8 @@ const createCommit = async (files: string[]): Promise<void> => {
   const securefixServerRepository = core.getInput(
     "securefix_server_repository",
   );
-  const securefixAppID = core.getInput(
-    "securefix_app_id",
-  );
-  const securefixAppPrivateKey = core.getInput(
-    "securefix_app_private_key",
-  );
+  const securefixAppID = core.getInput("securefix_app_id");
+  const securefixAppPrivateKey = core.getInput("securefix_app_private_key");
   const commitMessage = `chore(pinact): pin GitHub Actions`;
   if (securefixServerRepository) {
     if (!securefixAppID || !securefixAppPrivateKey) {
@@ -323,7 +319,6 @@ const createCommit = async (files: string[]): Promise<void> => {
     });
     return;
   }
-
 
   // Determine permissions based on files
   const permissions: githubAppToken.Permissions = { contents: "write" };
