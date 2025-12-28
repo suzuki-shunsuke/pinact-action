@@ -22,6 +22,7 @@ inputs:
       Falls back to github_token if not specified.
       contents:write - Push commits
     required: false
+
   app_id:
     description: |
       GitHub App ID
@@ -30,6 +31,20 @@ inputs:
     description: |
       GitHub App Private Key
     required: false
+
+  securefix_app_id:
+    description: |
+      GitHub App ID for Securefix Action
+    required: false
+  securefix_app_private_key:
+    description: |
+      GitHub App Private Key for Securefix Action
+    required: false
+  securefix_server_repository:
+    description: |
+      Securefix Action Server Repository
+    required: false
+
   skip_push:
     required: false
     description: |

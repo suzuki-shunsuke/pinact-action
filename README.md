@@ -112,6 +112,21 @@ You can also use the different access token for review:
     github_token_for_review: ${{secrets.BOT_GITHUB_TOKEN_FOR_REVIEW}}
 ```
 
+### Securefix Action
+
+pinact-action >= v1.3.0 [#854](https://github.com/suzuki-shunsuke/pinact-action/pull/854)
+
+As of v1.3.0, pinact-action can create commits via [Securefix Action](https://github.com/csm-actions/securefix-action) securely.
+About Securefix Action, please see the document of Securefix Action.
+
+```yaml
+- uses: suzuki-shunsuke/pinact-action@v1.3.0
+  with:
+    securefix_app_id: ${{vars.SECUREFIX_ACTION_CLIENT_APP_ID}}
+    securefix_app_private_key: ${{secrets.SECUREFIX_ACTION_CLIENT_APP_PRIVATE_KEY}}
+    securefix_server_repository: securefix-server
+```
+
 ### update, verify, min_age, includes, excludes
 
 These options are optional.
