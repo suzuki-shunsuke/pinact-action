@@ -51,7 +51,7 @@ jobs:
           persist-credentials: false
 
       - name: Pin actions
-        uses: suzuki-shunsuke/pinact-action@78ea6afd1fd0678ef72a7e07efc834fcc5ee9a21 # v1.2.0
+        uses: suzuki-shunsuke/pinact-action@28aeb220eb3252ad0d4422dd5d9368e925acbd8d # v1.3.0
         with:
           app_id: ${{vars.APP_ID}}
           app_private_key: ${{secrets.APP_PRIVATE_KEY}}
@@ -60,7 +60,7 @@ jobs:
 ### Use PAT
 
 ```yaml
-uses: suzuki-shunsuke/pinact-action@78ea6afd1fd0678ef72a7e07efc834fcc5ee9a21 # v1.2.0
+uses: suzuki-shunsuke/pinact-action@28aeb220eb3252ad0d4422dd5d9368e925acbd8d # v1.3.0
 with:
   github_token: ${{secrets.BOT_GITHUB_TOKEN}}
 ```
@@ -68,7 +68,7 @@ with:
 ### Using different GitHub Token for creating commits
 
 ```yaml
-uses: suzuki-shunsuke/pinact-action@78ea6afd1fd0678ef72a7e07efc834fcc5ee9a21 # v1.2.0
+uses: suzuki-shunsuke/pinact-action@28aeb220eb3252ad0d4422dd5d9368e925acbd8d # v1.3.0
 with:
   # For pinact run (contents:read for all actions is required)
   github_token: ${{secrets.BOT_GITHUB_TOKEN}}
@@ -82,7 +82,7 @@ If you don't want to push a commit, this action can also only validate files.
 In this case, if actions aren't pinned CI fails.
 
 ```yaml
-- uses: suzuki-shunsuke/pinact-action@78ea6afd1fd0678ef72a7e07efc834fcc5ee9a21 # v1.2.0
+- uses: suzuki-shunsuke/pinact-action@28aeb220eb3252ad0d4422dd5d9368e925acbd8d # v1.3.0
   with:
     skip_push: "true"
 ```
@@ -92,7 +92,7 @@ In this case, if actions aren't pinned CI fails.
 See also https://github.com/reviewdog/reviewdog
 
 ```yaml
-- uses: suzuki-shunsuke/pinact-action@78ea6afd1fd0678ef72a7e07efc834fcc5ee9a21 # v1.2.0
+- uses: suzuki-shunsuke/pinact-action@28aeb220eb3252ad0d4422dd5d9368e925acbd8d # v1.3.0
   with:
     review: "true"
     github_token: ${{secrets.BOT_GITHUB_TOKEN}}
@@ -105,7 +105,7 @@ You can also use the different access token for review:
 `contents:read` and `pull_requests:write` permissions are required.
 
 ```yaml
-- uses: suzuki-shunsuke/pinact-action@78ea6afd1fd0678ef72a7e07efc834fcc5ee9a21 # v1.2.0
+- uses: suzuki-shunsuke/pinact-action@28aeb220eb3252ad0d4422dd5d9368e925acbd8d # v1.3.0
   with:
     review: "true"
     github_token: ${{secrets.BOT_GITHUB_TOKEN}}
@@ -120,7 +120,7 @@ As of v1.3.0, pinact-action can create commits via [Securefix Action](https://gi
 About Securefix Action, please see the document of Securefix Action.
 
 ```yaml
-- uses: suzuki-shunsuke/pinact-action@v1.3.0
+- uses: suzuki-shunsuke/pinact-action@28aeb220eb3252ad0d4422dd5d9368e925acbd8d # v1.3.0
   with:
     securefix_app_id: ${{vars.SECUREFIX_ACTION_CLIENT_APP_ID}}
     securefix_app_private_key: ${{secrets.SECUREFIX_ACTION_CLIENT_APP_PRIVATE_KEY}}
@@ -132,7 +132,7 @@ About Securefix Action, please see the document of Securefix Action.
 These options are optional.
 
 ```yaml
-- uses: suzuki-shunsuke/pinact-action@78ea6afd1fd0678ef72a7e07efc834fcc5ee9a21 # v1.2.0
+- uses: suzuki-shunsuke/pinact-action@28aeb220eb3252ad0d4422dd5d9368e925acbd8d # v1.3.0
   with:
     skip_push: "true"
     update: "true"
