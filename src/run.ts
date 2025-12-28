@@ -3,6 +3,7 @@ import * as exec from "@actions/exec";
 import * as github from "@actions/github";
 import * as commit from "@suzuki-shunsuke/commit-ts";
 import * as githubAppToken from "@suzuki-shunsuke/github-app-token";
+import * as securefix from "@csm-actions/securefix-action";
 import * as aqua from "@aquaproj/aqua-installer";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -167,7 +168,7 @@ const runAutoCommitMode = async (ctx: RunContext): Promise<void> => {
   const { pinactToken, pinactInstalled, files, flags } = ctx;
 
   // Always use --fix in auto commit mode, use sarif format when review is enabled
-  const args = ["run", "--diff", "--fix"];
+  const args = ["run", "--check", "--diff", "--fix"];
   if (flags.review) {
     args.push("--format", "sarif");
   }
@@ -284,6 +285,45 @@ const createCommit = async (files: string[]): Promise<void> => {
   if (!branch) {
     throw new Error("Could not determine branch");
   }
+
+  const securefixServerRepository = core.getInput(
+    "securefix_server_repository",
+  );
+  const securefixAppID = core.getInput(
+    "securefix_app_id",
+  );
+  const securefixAppPrivateKey = core.getInput(
+    "securefix_app_private_key",
+  );
+  const commitMessage = `chore(pinact): pin GitHub Actions`;
+  if (securefixServerRepository) {
+    if (!securefixAppID || !securefixAppPrivateKey) {
+      throw new Error(
+        "securefix_app_id and securefix_app_private_key are required when securefix_server_repository is set",
+      );
+    }
+
+    core.info(
+      `Creating commit by Securefix Action: ${JSON.stringify({
+        owner,
+        repo,
+        branch,
+        message: "chore(pinact): pin GitHub Actions",
+        files,
+      })}`,
+    );
+
+    await securefix.request({
+      appId: securefixAppID,
+      privateKey: securefixAppPrivateKey,
+      serverRepository: securefixServerRepository,
+      files: new Set(files),
+      commitMessage: commitMessage,
+      workspace: process.env.GITHUB_WORKSPACE ?? "",
+    });
+    return;
+  }
+
 
   // Determine permissions based on files
   const permissions: githubAppToken.Permissions = { contents: "write" };
