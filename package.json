@@ -18,7 +18,7 @@
     "@types/node": "20.19.30",
     "@types/tmp": "0.2.6",
     "@vercel/ncc": "0.38.4",
-    "prettier": "3.8.0",
+    "prettier": "3.8.1",
     "ts-node": "10.9.2",
     "typescript": "5.9.3"
   }
