@@ -42,6 +42,7 @@ type Args = {
   verify: boolean;
   review: boolean;
   minAge: string;
+  separator: string;
   includes: string[];
   excludes: string[];
 };
@@ -119,6 +120,7 @@ const setup = async (): Promise<RunContext | null> => {
     verify: core.getBooleanInput("verify"),
     review: core.getBooleanInput("review"),
     minAge: core.getInput("min_age"),
+    separator: core.getInput("separator"),
     includes: core
       .getInput("includes")
       .split("\n")
@@ -364,6 +366,9 @@ const setFlags = (args: string[], flags: Args) => {
   // Note: --review is not added here; reviewdog is used instead when flags.review is true
   if (flags.minAge) {
     args.push("--min-age", flags.minAge);
+  }
+  if (flags.separator) {
+    args.push("--separator", flags.separator);
   }
   for (const include of flags.includes) {
     args.push("--include", include);

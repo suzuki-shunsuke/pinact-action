@@ -100,6 +100,10 @@ inputs:
       pinact run's --exclude option.
       Each value is newline separated.
       Lines starting with # are ignored.
+  separator:
+    required: false
+    description: |
+      pinact run's --separator option.
 runs:
   using: node20
   main: dist/index.js

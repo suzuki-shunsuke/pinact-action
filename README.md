@@ -128,7 +128,7 @@ About Securefix Action, please see the document of Securefix Action.
     securefix_server_repository: securefix-server
 ```
 
-### update, verify, min_age, includes, excludes
+### update, verify, min_age, includes, excludes, separator
 
 These options are optional.
 
@@ -145,6 +145,7 @@ These options are optional.
     excludes: |
       # lines starting with # are ignored
       actions/checkout
+    separator: "  # "
 ```
 
 ## Available versions
