@@ -120,7 +120,9 @@ const setup = async (): Promise<RunContext | null> => {
     verify: core.getBooleanInput("verify"),
     review: core.getBooleanInput("review"),
     minAge: core.getInput("min_age"),
-    separator: core.getInput("separator"),
+    separator: core.getInput("separator", {
+      trimWhitespace: false,
+    }),
     includes: core
       .getInput("includes")
       .split("\n")
@@ -345,7 +347,7 @@ const createCommit = async (files: string[]): Promise<void> => {
     })}`,
   );
 
-  await commit.createCommit(octokit, {
+  await commit.createCommit(octokit as commit.GitHub, {
     owner,
     repo,
     branch,
