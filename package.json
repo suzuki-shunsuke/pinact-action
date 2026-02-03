@@ -5,7 +5,7 @@
     "fmt": "prettier --write ."
   },
   "dependencies": {
-    "@actions/core": "2.0.3",
+    "@actions/core": "3.0.0",
     "@actions/exec": "2.0.0",
     "@actions/github": "6.0.1",
     "@aquaproj/aqua-installer": "npm:@jsr/aquaproj__aqua-installer@^0.0.2",
