@@ -44,3 +44,6 @@ jobs:
 
       # Test
       - uses: ./
+      - uses: ./
+        with:
+          separator: "  # "
