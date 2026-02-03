@@ -347,7 +347,7 @@ const createCommit = async (files: string[]): Promise<void> => {
     })}`,
   );
 
-  await commit.createCommit(octokit, {
+  await commit.createCommit(octokit as commit.GitHub, {
     owner,
     repo,
     branch,
