@@ -32,6 +32,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{github.token}}
           PR: ${{inputs.pr}}
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version-file: .node-version
+          cache: npm
       - run: npm ci
       - run: npm run build
       - run: npm run lint
