@@ -120,7 +120,9 @@ const setup = async (): Promise<RunContext | null> => {
     verify: core.getBooleanInput("verify"),
     review: core.getBooleanInput("review"),
     minAge: core.getInput("min_age"),
-    separator: core.getInput("separator"),
+    separator: core.getInput("separator", {
+      trimWhitespace: false,
+    }),
     includes: core
       .getInput("includes")
       .split("\n")
