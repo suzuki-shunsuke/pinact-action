@@ -22,7 +22,7 @@
     "@vercel/ncc": "0.38.4",
     "@eslint/js": "9.39.2",
     "eslint": "9.39.2",
-    "typescript-eslint": "8.54.0",
+    "typescript-eslint": "8.55.0",
     "jiti": "2.6.1",
     "prettier": "3.8.1",
     "ts-node": "10.9.2",
