@@ -4,7 +4,7 @@
 [![License](http://img.shields.io/badge/license-mit-blue.svg?style=flat-square)](https://raw.githubusercontent.com/suzuki-shunsuke/pinact-action/main/LICENSE) | [action.yaml](action.yaml)
 
 pinact-action is a GitHub Actions to pin GitHub Actions and reusable workflows by [pinact](https://github.com/suzuki-shunsuke/pinact).
-This action fixes files `\.github/workflows/[^/]+\.ya?ml$` and `^(.*/)?action\.ya?ml?` and pushes a commit to a remote branch.
+By default this action discovers `.github/workflows/*.{yml,yaml}` and `(*/){0,3}action.{yml,yaml}` (pinact's built-in scan) and pushes a commit to a remote branch. To target a wider or different set of files, configure them in `.pinact.yaml` and point the action at it with `config:`.
 
 ![image](https://github.com/suzuki-shunsuke/pinact-action/assets/13323303/dd301d04-152c-49ac-bdf3-dbf8293b376f)
 
@@ -101,6 +101,8 @@ If you want validation only (fail the CI when actions aren't pinned, never modif
 
 > [!WARNING]
 > The default behavior of `skip_push: "true"` changed: previously it was validate-only, now it modifies files. If you relied on the old check-only behavior, add `fix: "false"`.
+
+`skip_push: "true"` mode does not run any `git` command, so `actions/checkout` is not required when the workflow files are made available some other way (for example, a webhook payload combined with `diff_file:` and `no_api:`). The default (auto-commit) mode still needs `actions/checkout` because pinact's edits are committed via `git diff` against the workspace.
 
 ### Reviewdog
 
