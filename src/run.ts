@@ -68,7 +68,9 @@ const hasWorkflowFiles = (files: string[]): boolean => {
 const run = async () => {
   const ctx = await setup();
 
-  const skipPush = core.getBooleanInput("skip_push");
+  // `fix: false` implies `skip_push: true` — pinact writes nothing, so there
+  // is no commit to make and no reason to invoke git.
+  const skipPush = core.getBooleanInput("skip_push") || !ctx.flags.fix;
   if (skipPush) {
     await runSkipPushMode(ctx);
   } else {

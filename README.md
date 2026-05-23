@@ -90,12 +90,11 @@ By default (`fix: "true"`), pinact fixes the workflow files in the workspace but
 # ...later in the same job, your own commit/push step
 ```
 
-If you want validation only (fail the CI when actions aren't pinned, never modify files), set `fix: "false"` as well:
+If you want validation only (fail the CI when actions aren't pinned, never modify files), set `fix: "false"`. This implies `skip_push: "true"` (nothing was modified, so nothing to commit) so you don't need to set both:
 
 ```yaml
 - uses: suzuki-shunsuke/pinact-action@28aeb220eb3252ad0d4422dd5d9368e925acbd8d # v1.3.0
   with:
-    skip_push: "true"
     fix: "false"
 ```
 
