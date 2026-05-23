@@ -38,13 +38,19 @@ const revokeTokens = async () => {
 };
 
 type Args = {
+  config: string;
+  fix: boolean;
+  noApi: boolean;
   update: boolean;
   verify: boolean;
+  verifyMinAge: boolean;
   review: boolean;
   minAge: string;
   separator: string;
   includes: string[];
   excludes: string[];
+  branchToTags: string[];
+  diffFile: string;
 };
 
 type RunContext = {
@@ -116,8 +122,12 @@ const setup = async (): Promise<RunContext | null> => {
   }
 
   const flags: Args = {
+    config: core.getInput("config"),
+    fix: core.getBooleanInput("fix"),
+    noApi: core.getBooleanInput("no_api"),
     update: core.getBooleanInput("update"),
     verify: core.getBooleanInput("verify"),
+    verifyMinAge: core.getBooleanInput("verify_min_age"),
     review: core.getBooleanInput("review"),
     minAge: core.getInput("min_age"),
     separator: core.getInput("separator", {
@@ -133,6 +143,12 @@ const setup = async (): Promise<RunContext | null> => {
       .split("\n")
       .map((s) => s.trim())
       .filter((s) => s && !s.startsWith("#")),
+    branchToTags: core
+      .getInput("branch_to_tags")
+      .split("\n")
+      .map((s) => s.trim())
+      .filter((s) => s && !s.startsWith("#")),
+    diffFile: core.getInput("diff_file"),
   };
 
   // Check if reviewdog is installed when review is enabled
@@ -147,7 +163,11 @@ const setup = async (): Promise<RunContext | null> => {
 const runSkipPushMode = async (ctx: RunContext): Promise<void> => {
   const { pinactToken, pinactInstalled, files, flags } = ctx;
 
-  const args = ["run", "--diff"];
+  const args: string[] = [];
+  if (flags.config) {
+    args.push("--config", flags.config);
+  }
+  args.push("run", "--diff");
   if (flags.review) {
     args.push("--format", "sarif");
   } else {
@@ -172,7 +192,14 @@ const runAutoCommitMode = async (ctx: RunContext): Promise<void> => {
   const { pinactToken, pinactInstalled, files, flags } = ctx;
 
   // Always use --fix in auto commit mode, use sarif format when review is enabled
-  const args = ["run", "--check", "--diff", "--fix"];
+  const args: string[] = [];
+  if (flags.config) {
+    args.push("--config", flags.config);
+  }
+  args.push("run", "--check", "--diff");
+  if (flags.fix) {
+    args.push("--fix");
+  }
   if (flags.review) {
     args.push("--format", "sarif");
   }
@@ -359,11 +386,17 @@ const createCommit = async (files: string[]): Promise<void> => {
 };
 
 const setFlags = (args: string[], flags: Args) => {
+  if (flags.noApi) {
+    args.push("--no-api");
+  }
   if (flags.update) {
     args.push("--update");
   }
   if (flags.verify) {
     args.push("--verify");
+  }
+  if (flags.verifyMinAge) {
+    args.push("--verify-min-age");
   }
   // Note: --review is not added here; reviewdog is used instead when flags.review is true
   if (flags.minAge) {
@@ -377,6 +410,12 @@ const setFlags = (args: string[], flags: Args) => {
   }
   for (const exclude of flags.excludes) {
     args.push("--exclude", exclude);
+  }
+  for (const branchToTag of flags.branchToTags) {
+    args.push("--branch-to-tag", branchToTag);
+  }
+  if (flags.diffFile) {
+    args.push("--diff-file", flags.diffFile);
   }
 };
 

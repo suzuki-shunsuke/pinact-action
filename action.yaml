@@ -45,6 +45,16 @@ inputs:
       Securefix Action Server Repository
     required: false
 
+  fix:
+    required: false
+    description: |
+      pinact run's --fix option
+    default: "true"
+  no_api:
+    required: false
+    description: |
+      pinact run's --no-api option
+    default: "false"
   skip_push:
     required: false
     description: |
@@ -88,6 +98,11 @@ inputs:
     required: false
     description: |
       pinact run's --min-age option
+  verify_min_age:
+    required: false
+    description: |
+      pinact run's --verify-min-age option
+    default: "false"
   includes:
     required: false
     description: |
@@ -104,6 +119,20 @@ inputs:
     required: false
     description: |
       pinact run's --separator option.
+  branch_to_tags:
+    required: false
+    description: |
+      pinact run's --branch-to-tag option.
+      Each value is newline separated.
+      Lines starting with # are ignored.
+  config:
+    required: false
+    description: |
+      pinact run's --config option.
+  diff_file:
+    required: false
+    description: |
+      pinact run's --diff-file option.
 runs:
   using: node24
   main: dist/index.js

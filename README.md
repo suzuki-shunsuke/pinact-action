@@ -128,16 +128,19 @@ About Securefix Action, please see the document of Securefix Action.
     securefix_server_repository: securefix-server
 ```
 
-### update, verify, min_age, includes, excludes, separator
+### pinact options
 
-These options are optional.
+These options are optional and map to the corresponding `pinact run` flags.
 
 ```yaml
 - uses: suzuki-shunsuke/pinact-action@28aeb220eb3252ad0d4422dd5d9368e925acbd8d # v1.3.0
   with:
     skip_push: "true"
+    fix: "false" # pinact run --fix (default "true")
+    no_api: "true" # pinact run --no-api
     update: "true"
     verify: "true"
+    verify_min_age: "true" # pinact run --verify-min-age
     min_age: "7"
     includes: |
       actions/.*
@@ -145,7 +148,12 @@ These options are optional.
     excludes: |
       # lines starting with # are ignored
       actions/checkout
+    branch_to_tags: |
+      # pinact run --branch-to-tag, one regular expression per line
+      ^main$
     separator: "  # "
+    config: .pinact.yaml # pinact's --config global flag
+    diff_file: pr.diff # pinact run --diff-file, only process lines added by the PR
 ```
 
 ## Available versions
