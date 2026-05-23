@@ -79,14 +79,28 @@ with:
 
 ### skip_push
 
-If you don't want to push a commit, this action can also only validate files.
-In this case, if actions aren't pinned CI fails.
+If you don't want this action to create a commit, set `skip_push: "true"`.
+
+By default (`fix: "true"`), pinact fixes the workflow files in the workspace but no commit is created, so you can hand the changes off to a later step (for example, a unified commit step shared with other autofix tools — see [#1002](https://github.com/suzuki-shunsuke/pinact-action/issues/1002)):
 
 ```yaml
 - uses: suzuki-shunsuke/pinact-action@28aeb220eb3252ad0d4422dd5d9368e925acbd8d # v1.3.0
   with:
     skip_push: "true"
+# ...later in the same job, your own commit/push step
 ```
+
+If you want validation only (fail the CI when actions aren't pinned, never modify files), set `fix: "false"` as well:
+
+```yaml
+- uses: suzuki-shunsuke/pinact-action@28aeb220eb3252ad0d4422dd5d9368e925acbd8d # v1.3.0
+  with:
+    skip_push: "true"
+    fix: "false"
+```
+
+> [!WARNING]
+> The default behavior of `skip_push: "true"` changed: previously it was validate-only, now it modifies files. If you relied on the old check-only behavior, add `fix: "false"`.
 
 ### Reviewdog
 

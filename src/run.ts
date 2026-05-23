@@ -167,11 +167,9 @@ const runSkipPushMode = async (ctx: RunContext): Promise<void> => {
   if (flags.config) {
     args.push("--config", flags.config);
   }
-  args.push("run", "--diff");
+  args.push("run", flags.fix ? "--fix" : "--fix=false");
   if (flags.review) {
     args.push("--format", "sarif");
-  } else {
-    args.push("--check");
   }
   setFlags(args, flags);
 
@@ -191,15 +189,11 @@ const runSkipPushMode = async (ctx: RunContext): Promise<void> => {
 const runAutoCommitMode = async (ctx: RunContext): Promise<void> => {
   const { pinactToken, pinactInstalled, files, flags } = ctx;
 
-  // Always use --fix in auto commit mode, use sarif format when review is enabled
   const args: string[] = [];
   if (flags.config) {
     args.push("--config", flags.config);
   }
-  args.push("run", "--check", "--diff");
-  if (flags.fix) {
-    args.push("--fix");
-  }
+  args.push("run", flags.fix ? "--fix" : "--fix=false");
   if (flags.review) {
     args.push("--format", "sarif");
   }
