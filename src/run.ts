@@ -38,20 +38,25 @@ const revokeTokens = async () => {
 };
 
 type Args = {
+  config: string;
+  fix: boolean;
+  noApi: boolean;
   update: boolean;
   verify: boolean;
+  verifyMinAge: boolean;
   review: boolean;
   minAge: string;
   separator: string;
   includes: string[];
   excludes: string[];
+  branchToTags: string[];
+  diffFile: string;
 };
 
 type RunContext = {
   pinactToken: string;
   pinactInstalled: boolean;
   reviewdogInstalled: boolean;
-  files: string[];
   flags: Args;
 };
 
@@ -62,11 +67,10 @@ const hasWorkflowFiles = (files: string[]): boolean => {
 
 const run = async () => {
   const ctx = await setup();
-  if (!ctx) {
-    return;
-  }
 
-  const skipPush = core.getBooleanInput("skip_push");
+  // `fix: false` implies `skip_push: true` — pinact writes nothing, so there
+  // is no commit to make and no reason to invoke git.
+  const skipPush = core.getBooleanInput("skip_push") || !ctx.flags.fix;
   if (skipPush) {
     await runSkipPushMode(ctx);
   } else {
@@ -74,7 +78,7 @@ const run = async () => {
   }
 };
 
-const setup = async (): Promise<RunContext | null> => {
+const setup = async (): Promise<RunContext> => {
   const aquaConfig = path.join(__dirname, "..", "aqua", "aqua.yaml");
 
   // Get owner for token
@@ -108,16 +112,13 @@ const setup = async (): Promise<RunContext | null> => {
     env: { ...process.env, GITHUB_TOKEN: pinactToken },
   });
 
-  // Get target files
-  const files = await getTargetFiles();
-  if (files.length === 0) {
-    core.notice("No target files found");
-    return null;
-  }
-
   const flags: Args = {
+    config: core.getInput("config"),
+    fix: core.getBooleanInput("fix"),
+    noApi: core.getBooleanInput("no_api"),
     update: core.getBooleanInput("update"),
     verify: core.getBooleanInput("verify"),
+    verifyMinAge: core.getBooleanInput("verify_min_age"),
     review: core.getBooleanInput("review"),
     minAge: core.getInput("min_age"),
     separator: core.getInput("separator", {
@@ -133,6 +134,12 @@ const setup = async (): Promise<RunContext | null> => {
       .split("\n")
       .map((s) => s.trim())
       .filter((s) => s && !s.startsWith("#")),
+    branchToTags: core
+      .getInput("branch_to_tags")
+      .split("\n")
+      .map((s) => s.trim())
+      .filter((s) => s && !s.startsWith("#")),
+    diffFile: core.getInput("diff_file"),
   };
 
   // Check if reviewdog is installed when review is enabled
@@ -141,24 +148,26 @@ const setup = async (): Promise<RunContext | null> => {
     reviewdogInstalled = await isReviewdogInstalled();
   }
 
-  return { pinactToken, pinactInstalled, reviewdogInstalled, files, flags };
+  return { pinactToken, pinactInstalled, reviewdogInstalled, flags };
 };
 
 const runSkipPushMode = async (ctx: RunContext): Promise<void> => {
-  const { pinactToken, pinactInstalled, files, flags } = ctx;
+  const { pinactToken, pinactInstalled, flags } = ctx;
 
-  const args = ["run", "--diff"];
+  const args: string[] = [];
+  if (flags.config) {
+    args.push("--config", flags.config);
+  }
+  args.push("run", flags.fix ? "--fix" : "--fix=false");
   if (flags.review) {
     args.push("--format", "sarif");
-  } else {
-    args.push("--check");
   }
   setFlags(args, flags);
 
   if (flags.review) {
     await runPinactWithReviewdog(ctx, args);
   } else {
-    const result = await execPinact(pinactInstalled, args.concat(files), {
+    const result = await execPinact(pinactInstalled, args, {
       ignoreReturnCode: true,
       env: { ...process.env, GITHUB_TOKEN: pinactToken },
     });
@@ -169,10 +178,13 @@ const runSkipPushMode = async (ctx: RunContext): Promise<void> => {
 };
 
 const runAutoCommitMode = async (ctx: RunContext): Promise<void> => {
-  const { pinactToken, pinactInstalled, files, flags } = ctx;
+  const { pinactToken, pinactInstalled, flags } = ctx;
 
-  // Always use --fix in auto commit mode, use sarif format when review is enabled
-  const args = ["run", "--check", "--diff", "--fix"];
+  const args: string[] = [];
+  if (flags.config) {
+    args.push("--config", flags.config);
+  }
+  args.push("run", flags.fix ? "--fix" : "--fix=false");
   if (flags.review) {
     args.push("--format", "sarif");
   }
@@ -183,20 +195,16 @@ const runAutoCommitMode = async (ctx: RunContext): Promise<void> => {
   let pinactFailed = false;
 
   if (flags.review) {
-    pinactOutput = await getExecOutputPinact(
-      pinactInstalled,
-      args.concat(files),
-      {
-        ignoreReturnCode: true,
-        env: { ...process.env, GITHUB_TOKEN: pinactToken },
-      },
-    );
+    pinactOutput = await getExecOutputPinact(pinactInstalled, args, {
+      ignoreReturnCode: true,
+      env: { ...process.env, GITHUB_TOKEN: pinactToken },
+    });
     if (pinactOutput.exitCode !== 0) {
       core.error("pinact run failed");
       pinactFailed = true;
     }
   } else {
-    const result = await execPinact(pinactInstalled, args.concat(files), {
+    const result = await execPinact(pinactInstalled, args, {
       ignoreReturnCode: true,
       env: { ...process.env, GITHUB_TOKEN: pinactToken },
     });
@@ -206,15 +214,15 @@ const runAutoCommitMode = async (ctx: RunContext): Promise<void> => {
     }
   }
 
-  // Check if files have changed
-  const changed = await hasChanges(files);
+  // Detect files modified by pinact via git diff
+  const changedFiles = await getChangedFiles();
 
-  if (changed) {
+  if (changedFiles.length > 0) {
     // Files changed → commit and push, don't run reviewdog
     core.error(
       "GitHub Actions aren't pinned. A commit is pushed automatically to pin GitHub Actions.",
     );
-    await createCommit(files);
+    await createCommit(changedFiles);
     if (pinactFailed) {
       throw new Error("pinact run failed");
     }
@@ -238,16 +246,12 @@ const runPinactWithReviewdog = async (
   ctx: RunContext,
   args: string[],
 ): Promise<void> => {
-  const { pinactToken, pinactInstalled, files } = ctx;
+  const { pinactToken, pinactInstalled } = ctx;
 
-  const pinactResult = await getExecOutputPinact(
-    pinactInstalled,
-    args.concat(files),
-    {
-      ignoreReturnCode: true,
-      env: { ...process.env, GITHUB_TOKEN: pinactToken },
-    },
-  );
+  const pinactResult = await getExecOutputPinact(pinactInstalled, args, {
+    ignoreReturnCode: true,
+    env: { ...process.env, GITHUB_TOKEN: pinactToken },
+  });
 
   await runReviewdog(ctx, pinactResult.stdout);
 };
@@ -359,11 +363,17 @@ const createCommit = async (files: string[]): Promise<void> => {
 };
 
 const setFlags = (args: string[], flags: Args) => {
+  if (flags.noApi) {
+    args.push("--no-api");
+  }
   if (flags.update) {
     args.push("--update");
   }
   if (flags.verify) {
     args.push("--verify");
+  }
+  if (flags.verifyMinAge) {
+    args.push("--verify-min-age");
   }
   // Note: --review is not added here; reviewdog is used instead when flags.review is true
   if (flags.minAge) {
@@ -377,6 +387,12 @@ const setFlags = (args: string[], flags: Args) => {
   }
   for (const exclude of flags.excludes) {
     args.push("--exclude", exclude);
+  }
+  for (const branchToTag of flags.branchToTags) {
+    args.push("--branch-to-tag", branchToTag);
+  }
+  if (flags.diffFile) {
+    args.push("--diff-file", flags.diffFile);
   }
 };
 
@@ -467,50 +483,14 @@ const execReviewdog = async (
   return exec.exec("aqua", ["exec", "--", "reviewdog", ...args], options);
 };
 
-const getTargetFiles = async (): Promise<string[]> => {
-  const files: string[] = [];
-
-  // Get workflow files in .github/workflows
-  const workflowDir = path.join(".github", "workflows");
-  const workflowResult = await exec.getExecOutput(
-    "git",
-    ["ls-files", workflowDir],
-    { silent: true },
-  );
-  for (const line of workflowResult.stdout.split("\n")) {
-    const f = line.trim();
-    if (!f) continue;
-    const basename = path.basename(f);
-    if (basename.endsWith(".yml") || basename.endsWith(".yaml")) {
-      files.push(f);
-    }
-  }
-
-  // Get action.yaml or action.yml files
-  const allResult = await exec.getExecOutput("git", ["ls-files"], {
+const getChangedFiles = async (): Promise<string[]> => {
+  const result = await exec.getExecOutput("git", ["diff", "--name-only"], {
     silent: true,
   });
-  for (const line of allResult.stdout.split("\n")) {
-    const f = line.trim();
-    if (!f) continue;
-    const basename = path.basename(f);
-    if (basename === "action.yaml" || basename === "action.yml") {
-      files.push(f);
-    }
-  }
-
-  return files;
-};
-
-const hasChanges = async (files: string[]): Promise<boolean> => {
-  const result = await exec.getExecOutput(
-    "git",
-    ["diff", "--quiet", ...files],
-    {
-      ignoreReturnCode: true,
-    },
-  );
-  return result.exitCode !== 0;
+  return result.stdout
+    .split("\n")
+    .map((s) => s.trim())
+    .filter((s) => s);
 };
 
 const getToken = async (
