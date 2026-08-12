@@ -60,6 +60,25 @@ type RunContext = {
   flags: Args;
 };
 
+// Builds the error message for a non-zero pinact exit code.
+// pinact v4 classifies failures by exit code: 1 means actions aren't pinned
+// (auto-fixable), 2 means violations pinact can't fix automatically (branch
+// references, verify mismatches, min-age violations), and 3 means a GitHub API
+// error or an internal error. The exit code comes from whichever pinact runs,
+// so an unknown code is reported as is instead of being guessed at.
+const pinactErrorMessage = (exitCode: number): string => {
+  switch (exitCode) {
+    case 1:
+      return "GitHub Actions aren't pinned.";
+    case 2:
+      return "pinact found problems that it can't fix automatically.";
+    case 3:
+      return "pinact failed due to a GitHub API error or an internal error.";
+    default:
+      return `pinact failed with an unexpected exit code ${exitCode}.`;
+  }
+};
+
 const hasWorkflowFiles = (files: string[]): boolean => {
   // Handle both forward and backslashes for cross-platform compatibility
   return files.some((f) => /^\.github[/\\]workflows[/\\]/.test(f));
@@ -172,7 +191,7 @@ const runSkipPushMode = async (ctx: RunContext): Promise<void> => {
       env: { ...process.env, GITHUB_TOKEN: pinactToken },
     });
     if (result !== 0) {
-      throw new Error("GitHub Actions aren't pinned.");
+      throw new Error(pinactErrorMessage(result));
     }
   }
 };
@@ -192,26 +211,24 @@ const runAutoCommitMode = async (ctx: RunContext): Promise<void> => {
 
   // Run pinact (capture output if review is enabled for later reviewdog use)
   let pinactOutput: exec.ExecOutput | null = null;
-  let pinactFailed = false;
+  let pinactExitCode: number;
 
   if (flags.review) {
     pinactOutput = await getExecOutputPinact(pinactInstalled, args, {
       ignoreReturnCode: true,
       env: { ...process.env, GITHUB_TOKEN: pinactToken },
     });
-    if (pinactOutput.exitCode !== 0) {
-      core.error("pinact run failed");
-      pinactFailed = true;
-    }
+    pinactExitCode = pinactOutput.exitCode;
   } else {
-    const result = await execPinact(pinactInstalled, args, {
+    pinactExitCode = await execPinact(pinactInstalled, args, {
       ignoreReturnCode: true,
       env: { ...process.env, GITHUB_TOKEN: pinactToken },
     });
-    if (result !== 0) {
-      core.error("pinact run failed");
-      pinactFailed = true;
-    }
+  }
+  if (pinactExitCode !== 0) {
+    // Report the failure before creating a commit so that it isn't lost if
+    // createCommit throws.
+    core.error(pinactErrorMessage(pinactExitCode));
   }
 
   // Detect files modified by pinact via git diff
@@ -223,8 +240,8 @@ const runAutoCommitMode = async (ctx: RunContext): Promise<void> => {
       "GitHub Actions aren't pinned. A commit is pushed automatically to pin GitHub Actions.",
     );
     await createCommit(changedFiles);
-    if (pinactFailed) {
-      throw new Error("pinact run failed");
+    if (pinactExitCode !== 0) {
+      throw new Error(pinactErrorMessage(pinactExitCode));
     }
     return;
   }
@@ -237,8 +254,8 @@ const runAutoCommitMode = async (ctx: RunContext): Promise<void> => {
     await runReviewdog(ctx, pinactOutput.stdout);
   }
 
-  if (pinactFailed) {
-    throw new Error("pinact run failed");
+  if (pinactExitCode !== 0) {
+    throw new Error(pinactErrorMessage(pinactExitCode));
   }
 };
 
