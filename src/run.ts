@@ -95,7 +95,7 @@ const setup = async (): Promise<RunContext> => {
     if (!aquaInstalled) {
       await aqua.action({
         githubToken: pinactToken,
-        version: "v2.56.1",
+        version: "v2.62.3",
         enableAquaInstall: false,
       });
     }
