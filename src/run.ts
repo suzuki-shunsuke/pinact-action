@@ -60,6 +60,11 @@ type RunContext = {
   flags: Args;
 };
 
+// The lowest pinact exit code that means pinact didn't finish its work.
+// Exit codes 1 and 2 report violations found by a complete run, while 3 and
+// above mean the run itself broke, so its result can't be trusted.
+const pinactExitCodeError = 3;
+
 // Builds the error message for a non-zero pinact exit code.
 // pinact v4 classifies failures by exit code: 1 means actions aren't pinned
 // (auto-fixable), 2 means violations pinact can't fix automatically (branch
@@ -270,7 +275,24 @@ const runPinactWithReviewdog = async (
     env: { ...process.env, GITHUB_TOKEN: pinactToken },
   });
 
+  // Violations are reported by reviewdog and their severity is governed by its
+  // -fail-level, but an error means pinact stopped before checking everything.
+  // The review would then be incomplete, so the step must fail regardless of
+  // what reviewdog makes of the findings pinact did produce.
+  const pinactFailed = pinactResult.exitCode >= pinactExitCodeError;
+  if (pinactFailed) {
+    // Report before running reviewdog so the failure isn't lost if reviewdog
+    // throws.
+    core.error(pinactErrorMessage(pinactResult.exitCode));
+  }
+
+  // Post the findings pinact managed to produce before failing: a partial
+  // review is more useful than a bare failure.
   await runReviewdog(ctx, pinactResult.stdout);
+
+  if (pinactFailed) {
+    throw new Error(pinactErrorMessage(pinactResult.exitCode));
+  }
 };
 
 const runReviewdog = async (
