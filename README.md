@@ -174,6 +174,38 @@ These options are optional and map to the corresponding `pinact run` flags.
     diff_file: pr.diff # pinact run --diff-file, only process lines added by the PR
 ```
 
+## Outputs
+
+`result` tells apart a violation found by pinact from a failure of pinact or of the action itself, without having to parse logs.
+
+| `result`     | Meaning                                                                                                                          |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| `success`    | No problem was found                                                                                                             |
+| `not_pinned` | GitHub Actions aren't pinned                                                                                                     |
+| `unfixable`  | pinact found problems that it can't fix automatically, such as a branch reference, a `verify` mismatch, or a `min_age` violation |
+| `error`      | pinact failed with a GitHub API error or an internal error, or the action itself failed                                          |
+
+`exit_code` is `pinact run`'s exit code, which is what `result` is derived from. It is empty if pinact wasn't run, for example when creating a GitHub App token failed.
+
+Unless `review` is enabled, the step fails in every case other than `success`, so a step reading these outputs needs `if: always()` (or `failure()`). Outputs set by a failed step are still available.
+With `review: "true"`, whether a violation fails the step is up to `reviewdog_fail_level`, so `result` can be `not_pinned` or `unfixable` on a step that succeeded.
+
+```yaml
+- id: pinact
+  uses: suzuki-shunsuke/pinact-action@28aeb220eb3252ad0d4422dd5d9368e925acbd8d # v1.3.0
+  with:
+    skip_push: "true"
+    fix: "false"
+
+- if: always() && steps.pinact.outputs.result == 'error'
+  run: echo "pinact itself failed, so nothing was verified"
+```
+
+> [!NOTE]
+> `not_pinned` only occurs with `fix: "false"`.
+> When `fix` is enabled, which is the default, pinact fixes the files and exits with 0, so the result is `success`.
+> In the default (auto-commit) mode that outcome is where a commit is pushed.
+
 ## Available versions
 
 pinact-action's main branch and feature branches don't work.

@@ -14,11 +14,51 @@ const __dirname = path.dirname(__filename);
 // Token info list for revocation
 const appTokenInfoList: { token: string; expiresAt: string }[] = [];
 
+// Exit code of `pinact run`, or null if it hasn't run. Recorded for the
+// exit_code output.
+let pinactRunExitCode: number | null = null;
+
+const recordPinactExitCode = (exitCode: number): number => {
+  pinactRunExitCode = exitCode;
+  return exitCode;
+};
+
+// Errors thrown because pinact reported a problem, as opposed to the action
+// itself failing (creating a token, pushing a commit, running reviewdog...).
+// Only the former are described by pinact's exit code.
+class PinactError extends Error {}
+
 export const main = async () => {
   try {
     await run();
+    setOutputs(false);
+  } catch (error) {
+    setOutputs(!(error instanceof PinactError));
+    throw error;
   } finally {
     await revokeTokens();
+  }
+};
+
+const setOutputs = (failedOutsidePinact: boolean): void => {
+  core.setOutput("exit_code", pinactRunExitCode ?? "");
+  core.setOutput("result", failedOutsidePinact ? "error" : resultOutput());
+};
+
+// Names the outcome that pinact's exit code describes.
+// Exit codes 3 and above mean pinact didn't finish its work, and a null exit
+// code means the action broke before pinact ran; both are reported as an error
+// because nothing was verified.
+const resultOutput = (): string => {
+  switch (pinactRunExitCode) {
+    case 0:
+      return "success";
+    case 1:
+      return "not_pinned";
+    case 2:
+      return "unfixable";
+    default:
+      return "error";
   }
 };
 
@@ -191,12 +231,14 @@ const runSkipPushMode = async (ctx: RunContext): Promise<void> => {
   if (flags.review) {
     await runPinactWithReviewdog(ctx, args);
   } else {
-    const result = await execPinact(pinactInstalled, args, {
-      ignoreReturnCode: true,
-      env: { ...process.env, GITHUB_TOKEN: pinactToken },
-    });
-    if (result !== 0) {
-      throw new Error(pinactErrorMessage(result));
+    const exitCode = recordPinactExitCode(
+      await execPinact(pinactInstalled, args, {
+        ignoreReturnCode: true,
+        env: { ...process.env, GITHUB_TOKEN: pinactToken },
+      }),
+    );
+    if (exitCode !== 0) {
+      throw new PinactError(pinactErrorMessage(exitCode));
     }
   }
 };
@@ -223,12 +265,14 @@ const runAutoCommitMode = async (ctx: RunContext): Promise<void> => {
       ignoreReturnCode: true,
       env: { ...process.env, GITHUB_TOKEN: pinactToken },
     });
-    pinactExitCode = pinactOutput.exitCode;
+    pinactExitCode = recordPinactExitCode(pinactOutput.exitCode);
   } else {
-    pinactExitCode = await execPinact(pinactInstalled, args, {
-      ignoreReturnCode: true,
-      env: { ...process.env, GITHUB_TOKEN: pinactToken },
-    });
+    pinactExitCode = recordPinactExitCode(
+      await execPinact(pinactInstalled, args, {
+        ignoreReturnCode: true,
+        env: { ...process.env, GITHUB_TOKEN: pinactToken },
+      }),
+    );
   }
   if (pinactExitCode !== 0) {
     // Report the failure before creating a commit so that it isn't lost if
@@ -246,7 +290,7 @@ const runAutoCommitMode = async (ctx: RunContext): Promise<void> => {
     );
     await createCommit(changedFiles);
     if (pinactExitCode !== 0) {
-      throw new Error(pinactErrorMessage(pinactExitCode));
+      throw new PinactError(pinactErrorMessage(pinactExitCode));
     }
     return;
   }
@@ -260,7 +304,7 @@ const runAutoCommitMode = async (ctx: RunContext): Promise<void> => {
   }
 
   if (pinactExitCode !== 0) {
-    throw new Error(pinactErrorMessage(pinactExitCode));
+    throw new PinactError(pinactErrorMessage(pinactExitCode));
   }
 };
 
@@ -274,6 +318,7 @@ const runPinactWithReviewdog = async (
     ignoreReturnCode: true,
     env: { ...process.env, GITHUB_TOKEN: pinactToken },
   });
+  recordPinactExitCode(pinactResult.exitCode);
 
   // Violations are reported by reviewdog and their severity is governed by its
   // -fail-level, but an error means pinact stopped before checking everything.
@@ -291,7 +336,7 @@ const runPinactWithReviewdog = async (
   await runReviewdog(ctx, pinactResult.stdout);
 
   if (pinactFailed) {
-    throw new Error(pinactErrorMessage(pinactResult.exitCode));
+    throw new PinactError(pinactErrorMessage(pinactResult.exitCode));
   }
 };
 
