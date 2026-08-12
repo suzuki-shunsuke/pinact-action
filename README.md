@@ -117,6 +117,9 @@ See also https://github.com/reviewdog/reviewdog
     reviewdog_filter_mode: nofilter # The default is "added"
 ```
 
+`reviewdog_fail_level` governs the violations pinact reports, but it doesn't cover pinact failing on its own.
+If pinact stops with a GitHub API error or an internal error, the review is incomplete, so the step fails even when reviewdog reports nothing.
+
 You can also use the different access token for review:
 `contents:read` and `pull_requests:write` permissions are required.
 
