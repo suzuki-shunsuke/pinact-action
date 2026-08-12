@@ -176,7 +176,7 @@ These options are optional and map to the corresponding `pinact run` flags.
 
 ## Outputs
 
-`result` tells apart a violation found by pinact from a failure of pinact or of the action itself, without having to parse logs.
+The `result` output tells apart a violation found by pinact from a failure of pinact or of the action itself, without having to parse logs.
 
 | `result`     | Meaning                                                                                                                          |
 | ------------ | -------------------------------------------------------------------------------------------------------------------------------- |
@@ -185,9 +185,7 @@ These options are optional and map to the corresponding `pinact run` flags.
 | `unfixable`  | pinact found problems that it can't fix automatically, such as a branch reference, a `verify` mismatch, or a `min_age` violation |
 | `error`      | pinact failed with a GitHub API error or an internal error, or the action itself failed                                          |
 
-`exit_code` is `pinact run`'s exit code, which is what `result` is derived from. It is empty if pinact wasn't run, for example when creating a GitHub App token failed.
-
-Unless `review` is enabled, the step fails in every case other than `success`, so a step reading these outputs needs `if: always()` (or `failure()`). Outputs set by a failed step are still available.
+Unless `review` is enabled, the step fails in every case other than `success`, so a step reading this output needs `if: always()` (or `failure()`). Outputs set by a failed step are still available.
 With `review: "true"`, whether a violation fails the step is up to `reviewdog_fail_level`, so `result` can be `not_pinned` or `unfixable` on a step that succeeded.
 
 ```yaml

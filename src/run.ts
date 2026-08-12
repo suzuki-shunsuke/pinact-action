@@ -14,8 +14,8 @@ const __dirname = path.dirname(__filename);
 // Token info list for revocation
 const appTokenInfoList: { token: string; expiresAt: string }[] = [];
 
-// Exit code of `pinact run`, or null if it hasn't run. Recorded for the
-// exit_code output.
+// Exit code of `pinact run`, or null if it hasn't run. The result output is
+// derived from it.
 let pinactRunExitCode: number | null = null;
 
 const recordPinactExitCode = (exitCode: number): number => {
@@ -31,25 +31,24 @@ class PinactError extends Error {}
 export const main = async () => {
   try {
     await run();
-    setOutputs(false);
+    core.setOutput("result", resultOutput(false));
   } catch (error) {
-    setOutputs(!(error instanceof PinactError));
+    core.setOutput("result", resultOutput(!(error instanceof PinactError)));
     throw error;
   } finally {
     await revokeTokens();
   }
 };
 
-const setOutputs = (failedOutsidePinact: boolean): void => {
-  core.setOutput("exit_code", pinactRunExitCode ?? "");
-  core.setOutput("result", failedOutsidePinact ? "error" : resultOutput());
-};
-
-// Names the outcome that pinact's exit code describes.
-// Exit codes 3 and above mean pinact didn't finish its work, and a null exit
-// code means the action broke before pinact ran; both are reported as an error
-// because nothing was verified.
-const resultOutput = (): string => {
+// Names the outcome of the run.
+// pinact's exit code describes it only when the action didn't fail on its own.
+// Exit codes 3 and above mean pinact didn't finish its work, and no exit code
+// at all means the action broke before pinact ran; both are reported as an
+// error because nothing was verified.
+const resultOutput = (failedOutsidePinact: boolean): string => {
+  if (failedOutsidePinact) {
+    return "error";
+  }
   switch (pinactRunExitCode) {
     case 0:
       return "success";

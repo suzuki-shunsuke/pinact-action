@@ -141,13 +141,6 @@ outputs:
       not_pinned - GitHub Actions aren't pinned. Only with fix: false
       unfixable - pinact found problems that it can't fix automatically
       error - pinact failed, or the action itself failed
-  exit_code:
-    description: |
-      pinact run's exit code.
-      Empty if pinact wasn't run.
-      The meaning depends on the pinact being run.
-      With the bundled pinact v4:
-      0 = no problem, 1 = not pinned, 2 = unfixable, 3 = GitHub API or internal error
 runs:
   using: node24
   main: dist/index.js
