@@ -5,4 +5,14 @@
     "github>aquaproj/aqua-renovate-config#2.13.0",
     "github>aquaproj/aqua-renovate-config:file#2.13.0(aqua/imports/.*\\.ya?ml)",
   ],
+  packageRules: [
+    {
+      // @vercel/ncc cannot build with typescript v7. Its bundled ts-loader
+      // fails before compiling anything:
+      //   TypeError: Cannot read properties of undefined (reading 'fileExists')
+      // Remove this once ncc supports v7.
+      matchDepNames: ["typescript"],
+      allowedVersions: "<7",
+    },
+  ],
 }
