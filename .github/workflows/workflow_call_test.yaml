@@ -39,6 +39,10 @@ jobs:
     uses: ./.github/workflows/wc-ghalint.yaml
     permissions: {}
 
+  build:
+    uses: ./.github/workflows/wc-build.yaml
+    permissions: {}
+
   create-pr-branch:
     uses: ./.github/workflows/wc-create-pr-branch.yaml
     if: github.event.pull_request.user.login == 'suzuki-shunsuke'
