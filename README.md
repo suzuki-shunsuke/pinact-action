@@ -178,3 +178,42 @@ These options are optional and map to the corresponding `pinact run` flags.
 
 pinact-action's main branch and feature branches don't work.
 [Please see the document](https://github.com/suzuki-shunsuke/release-js-action/blob/main/docs/available_versions.md).
+
+## Private keys in AWS KMS
+
+A GitHub App private key in GitHub Secrets never expires, so anyone who obtains
+it can generate installation access tokens indefinitely. Importing the key into
+AWS KMS removes that path: the key can never be exported, and only the JSON Web
+Token signing is delegated to it.
+
+Set `aws_kms_key_id` instead of `app_private_key`, and
+`securefix_aws_kms_key_id` instead of `securefix_app_private_key`. Passing a key
+ARN is enough, since an ARN carries its region; for an alias or a bare key id,
+set `aws_region` or leave it to the AWS SDK.
+
+Set `aws_role_to_assume` and this action assumes the IAM role itself with the
+GitHub OIDC token. The AWS credentials then stay inside the action and are never
+exported, so later steps of the job can't see them. Leaving it unset uses the
+standard AWS credential chain, so `aws-actions/configure-aws-credentials` works
+as well.
+
+```yaml
+permissions:
+  id-token: write # Required to assume the AWS IAM role via OIDC
+  contents: read
+
+steps:
+  - uses: suzuki-shunsuke/pinact-action@v1
+    with:
+      client_id: ${{vars.APP_CLIENT_ID}}
+      aws_kms_key_id: ${{vars.KMS_KEY_ID}}
+      aws_role_to_assume: ${{vars.ROLE_TO_ASSUME}}
+```
+
+`securefix_aws_region` and `securefix_aws_role_to_assume` fall back to
+`aws_region` and `aws_role_to_assume`, so one region and one role cover both
+apps. Set them to give each key its own IAM role, so that a role can sign with
+only the key it belongs to.
+
+Either `client_id` or `app_id` identifies an app, and `securefix_client_id` or
+`securefix_app_id` the other. The Client ID takes precedence when both are set.
