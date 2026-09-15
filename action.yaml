@@ -50,8 +50,8 @@ inputs:
     description: |
       The AWS region of the KMS key.
       It can be omitted when the KMS key input is an ARN, which carries the
-      region. Otherwise it falls back to the AWS SDK's own resolution, such as
-      the AWS_REGION environment variable.
+      region. Otherwise it falls back to the AWS_REGION or AWS_DEFAULT_REGION
+      environment variable.
       It's shared by both apps unless securefix_aws_region is set.
     required: false
   aws_role_to_assume:
@@ -60,8 +60,9 @@ inputs:
       The job needs the permission `id-token: write`.
       The credentials are kept inside this action and are never exported, so
       later steps of the job can't see them.
-      Leave this unset to use the standard AWS credential chain instead, which
-      is what aws-actions/configure-aws-credentials sets up.
+      Leave this unset to use the AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY and
+      AWS_SESSION_TOKEN environment variables instead, which is what
+      aws-actions/configure-aws-credentials exports.
       It's shared by both apps unless securefix_aws_role_to_assume is set.
     required: false
 

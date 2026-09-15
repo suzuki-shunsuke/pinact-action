@@ -189,13 +189,14 @@ Token signing is delegated to it.
 Set `aws_kms_key_id` instead of `app_private_key`, and
 `securefix_aws_kms_key_id` instead of `securefix_app_private_key`. Passing a key
 ARN is enough, since an ARN carries its region; for an alias or a bare key id,
-set `aws_region` or leave it to the AWS SDK.
+set `aws_region` or the `AWS_REGION` environment variable.
 
 Set `aws_role_to_assume` and this action assumes the IAM role itself with the
 GitHub OIDC token. The AWS credentials then stay inside the action and are never
-exported, so later steps of the job can't see them. Leaving it unset uses the
-standard AWS credential chain, so `aws-actions/configure-aws-credentials` works
-as well.
+exported, so later steps of the job can't see them. Leaving it unset reads the
+`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_SESSION_TOKEN`
+environment variables, so `aws-actions/configure-aws-credentials` works as
+well.
 
 ```yaml
 permissions:

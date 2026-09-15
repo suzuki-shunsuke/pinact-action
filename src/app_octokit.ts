@@ -1,12 +1,14 @@
 import * as core from "@actions/core";
-import { KMSClient } from "@aws-sdk/client-kms";
 import { createAppAuth } from "@octokit/auth-app";
 import { Octokit } from "@octokit/rest";
-import { credentials } from "@suzuki-shunsuke/actions-aws-oidc";
+import {
+  credentials,
+  type Credentials,
+} from "@suzuki-shunsuke/actions-aws-oidc";
 import { createJwt } from "@suzuki-shunsuke/github-app-jwt-aws-kms";
 
 /**
- * Builds a KMS client.
+ * Builds the AWS credentials signing with the KMS key.
  *
  * When aws_role_to_assume is set, the IAM role is assumed here with the GitHub
  * OIDC token, and the resulting credentials never leave this process. Later
@@ -14,20 +16,18 @@ import { createJwt } from "@suzuki-shunsuke/github-app-jwt-aws-kms";
  * aws-actions/configure-aws-credentials exports as environment variables or
  * writes to ~/.aws/credentials.
  *
- * Undefined leaves the client to @suzuki-shunsuke/github-app-jwt-aws-kms, which
- * builds one from the key ARN's region and the standard AWS credential chain,
- * so aws-actions/configure-aws-credentials works as well.
+ * Undefined leaves the credentials to
+ * @suzuki-shunsuke/github-app-jwt-aws-kms, which reads AWS_ACCESS_KEY_ID and
+ * the other standard environment variables, so
+ * aws-actions/configure-aws-credentials works as well.
  */
-const newKMSClient = (prefix: string): KMSClient | undefined => {
+const newCredentials = (prefix: string): Credentials | undefined => {
   const roleArn = input(prefix, "aws_role_to_assume");
   if (!roleArn) {
     return undefined;
   }
   core.info(`assuming an AWS IAM role with the GitHub OIDC token: ${roleArn}`);
-  return new KMSClient({
-    region: input(prefix, "aws_region") || undefined,
-    credentials: credentials({ roleArn }),
-  });
+  return credentials({ roleArn });
 };
 
 /**
@@ -75,7 +75,7 @@ export const newAppOctokit = (prefix = ""): Octokit => {
         createJwt: createJwt({
           keyId: kmsKeyId,
           region: input(prefix, "aws_region") || undefined,
-          client: newKMSClient(prefix),
+          credentials: newCredentials(prefix),
         }),
       },
     });
