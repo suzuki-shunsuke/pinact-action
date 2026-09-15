@@ -3,13 +3,10 @@ import * as exec from "@actions/exec";
 import * as github from "@actions/github";
 import * as commit from "@suzuki-shunsuke/commit-ts";
 import * as githubAppToken from "@suzuki-shunsuke/github-app-token";
+import { getAppId, newAppOctokit } from "./app_octokit";
 import * as securefix from "@csm-actions/securefix-action";
 import * as aqua from "@aquaproj/aqua-installer";
 import * as path from "node:path";
-import { fileURLToPath } from "node:url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // Token info list for revocation
 const appTokenInfoList: { token: string; expiresAt: string }[] = [];
@@ -142,7 +139,12 @@ const run = async () => {
 };
 
 const setup = async (): Promise<RunContext> => {
-  const aquaConfig = path.join(__dirname, "..", "aqua", "aqua.yaml");
+  // `import.meta.dirname` rather than `__dirname`: ncc treats
+  // `path.join(__dirname, ...)` as an asset reference and copies the file it
+  // points at into `dist`, flattening it to `dist/aqua.yaml`. The copy loses
+  // `aqua/imports/*.yaml` and `aqua/aqua-checksums.json`, so aqua reads a
+  // config with no packages and `pinact` is not found.
+  const aquaConfig = path.join(import.meta.dirname, "..", "aqua", "aqua.yaml");
 
   // Get owner for token
   const owner = github.context.repo.owner;
@@ -380,13 +382,11 @@ const createCommit = async (files: string[]): Promise<void> => {
   const securefixServerRepository = core.getInput(
     "securefix_server_repository",
   );
-  const securefixAppID = core.getInput("securefix_app_id");
-  const securefixAppPrivateKey = core.getInput("securefix_app_private_key");
   const commitMessage = `chore(pinact): pin GitHub Actions`;
   if (securefixServerRepository) {
-    if (!securefixAppID || !securefixAppPrivateKey) {
+    if (!getAppId("securefix_")) {
       throw new Error(
-        "securefix_app_id and securefix_app_private_key are required when securefix_server_repository is set",
+        "securefix_client_id or securefix_app_id is required when securefix_server_repository is set",
       );
     }
 
@@ -401,8 +401,7 @@ const createCommit = async (files: string[]): Promise<void> => {
     );
 
     await securefix.request({
-      appId: securefixAppID,
-      privateKey: securefixAppPrivateKey,
+      appOctokit: newAppOctokit("securefix_"),
       serverRepository: securefixServerRepository,
       files: new Set(files),
       commitMessage: commitMessage,
@@ -585,12 +584,8 @@ const getToken = async (
   if (token) {
     return token;
   }
-  const appId = core.getInput("app_id");
-  const appPrivateKey = core.getInput("app_private_key");
+  const appId = getAppId();
   if (appId) {
-    if (!appPrivateKey) {
-      throw new Error("app_private_key is required when app_id is provided");
-    }
     core.info(
       `Creating GitHub App token: ${JSON.stringify({
         owner,
@@ -598,15 +593,8 @@ const getToken = async (
         permissions,
       })}`,
     );
-    const options: {
-      appId: string;
-      privateKey: string;
-      owner: string;
-      permissions: githubAppToken.Permissions;
-      repositories?: string[];
-    } = {
-      appId,
-      privateKey: appPrivateKey,
+    const options: githubAppToken.OwnerInputs = {
+      octokit: newAppOctokit(),
       owner,
       permissions,
     };
@@ -621,14 +609,16 @@ const getToken = async (
     });
     return appToken.token;
   }
-  if (appPrivateKey) {
-    throw new Error("app_id is required when app_private_key is provided");
+  if (core.getInput("app_private_key") || core.getInput("aws_kms_key_id")) {
+    throw new Error(
+      "client_id or app_id is required when app_private_key or aws_kms_key_id is provided",
+    );
   }
   const defaultToken = core.getInput("default_github_token");
   if (defaultToken) {
     return defaultToken;
   }
   throw new Error(
-    "github_token, app_id/app_private_key, or default_github_token is required",
+    "github_token, an app (client_id or app_id, with app_private_key or aws_kms_key_id), or default_github_token is required",
   );
 };
