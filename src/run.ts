@@ -6,10 +6,6 @@ import * as githubAppToken from "@suzuki-shunsuke/github-app-token";
 import * as securefix from "@csm-actions/securefix-action";
 import * as aqua from "@aquaproj/aqua-installer";
 import * as path from "node:path";
-import { fileURLToPath } from "node:url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // Token info list for revocation
 const appTokenInfoList: { token: string; expiresAt: string }[] = [];
@@ -103,7 +99,12 @@ const run = async () => {
 };
 
 const setup = async (): Promise<RunContext> => {
-  const aquaConfig = path.join(__dirname, "..", "aqua", "aqua.yaml");
+  // `import.meta.dirname` rather than `__dirname`: ncc treats
+  // `path.join(__dirname, ...)` as an asset reference and copies the file it
+  // points at into `dist`, flattening it to `dist/aqua.yaml`. The copy loses
+  // `aqua/imports/*.yaml` and `aqua/aqua-checksums.json`, so aqua reads a
+  // config with no packages and `pinact` is not found.
+  const aquaConfig = path.join(import.meta.dirname, "..", "aqua", "aqua.yaml");
 
   // Get owner for token
   const owner = github.context.repo.owner;
