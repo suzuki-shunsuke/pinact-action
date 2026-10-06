@@ -9,7 +9,7 @@ jobs:
     # Renovate pull requests never exercise the build. This job has no
     # permissions and runs for every pull request.
     timeout-minutes: 10
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions: {}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
