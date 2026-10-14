@@ -12,7 +12,7 @@ on:
         required: false
 jobs:
   release:
-    uses: ./.github/workflows/wc-create-pr-branch.yaml
+    uses: suzuki-shunsuke/js-action-release-workflow/.github/workflows/release.yaml@89c0f9f455f977a280103a7f450573adac9d8cf6 # v0.0.1
     secrets:
       TAKUMI_GUARD_BOT_ID: ${{secrets.TAKUMI_GUARD_BOT_ID}}
     permissions:

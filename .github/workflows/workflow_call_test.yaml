@@ -7,8 +7,8 @@ on:
         required: true
 permissions: {}
 jobs:
-  create-pr-branch:
-    uses: ./.github/workflows/wc-create-pr-branch.yaml
+  release:
+    uses: suzuki-shunsuke/js-action-release-workflow/.github/workflows/release.yaml@89c0f9f455f977a280103a7f450573adac9d8cf6 # v0.0.1
     permissions:
       contents: write
       pull-requests: write
@@ -18,6 +18,23 @@ jobs:
     with:
       version: pr/${{github.event.pull_request.number}}
       pr: ${{github.event.pull_request.number}}
+
+  # Test the action built by the release job
+  test:
+    uses: ./.github/workflows/wc-test.yaml
+    needs: release
+    permissions:
+      contents: write
+    with:
+      sha: ${{needs.release.outputs.sha}}
+
+  test-js:
+    uses: suzuki-shunsuke/js-action-test-workflow/.github/workflows/test.yaml@8f0b1fefeca5d88fc714b957f9aed1c7e29cae3b # v0.0.1
+    permissions:
+      contents: read
+      id-token: write
+    secrets:
+      TAKUMI_GUARD_BOT_ID: ${{secrets.TAKUMI_GUARD_BOT_ID}}
 
   test-workflow:
     uses: suzuki-shunsuke/test-workflow/.github/workflows/test.yaml@51ece8dcaabff59820bfb2053c56e3cb281cf7b2 # v0.0.1
