@@ -13,9 +13,12 @@ on:
 jobs:
   release:
     uses: ./.github/workflows/wc-create-pr-branch.yaml
+    secrets:
+      TAKUMI_GUARD_BOT_ID: ${{secrets.TAKUMI_GUARD_BOT_ID}}
     permissions:
       contents: write
       pull-requests: write
+      id-token: write
     with:
       version: ${{inputs.tag}}
       pr: ${{inputs.pr}}

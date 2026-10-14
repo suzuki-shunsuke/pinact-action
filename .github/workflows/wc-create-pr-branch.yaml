@@ -16,10 +16,50 @@ on:
         required: false
         default: false
         type: boolean
+    secrets:
+      TAKUMI_GUARD_BOT_ID:
+        required: true
 jobs:
+  jsmodule:
+    timeout-minutes: 15
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+      pull-requests: read
+      id-token: write # Required for OIDC
+    outputs:
+      sha: ${{steps.sha.outputs.value}}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: gh pr checkout "$PR"
+        if: inputs.pr != ''
+        env:
+          GITHUB_TOKEN: ${{github.token}}
+          PR: ${{inputs.pr}}
+      - id: sha
+        run: echo "value=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+      - uses: flatt-security/setup-takumi-guard-npm@14f07d0cbc739b42a1b7c70a04c2b84cd1318ddd # v1.4.0
+        with:
+          bot-id: ${{secrets.TAKUMI_GUARD_BOT_ID}}
+      - run: npm ci
+
+      # Archive node_modules with tar to keep file permissions and symlinks (e.g. node_modules/.bin)
+      - run: tar -cf "$RUNNER_TEMP/node_modules.tar" node_modules
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          path: ${{runner.temp}}/node_modules.tar
+          name: node_modules-create-pr-branch
+          retention-days: 1
+
   create-pr-branch:
     timeout-minutes: 20
     runs-on: ubuntu-26.04
+    needs: jsmodule
     permissions:
       contents: write
       pull-requests: write
@@ -32,15 +72,26 @@ jobs:
         env:
           GITHUB_TOKEN: ${{github.token}}
           PR: ${{inputs.pr}}
+      # Fail if the pull request was updated after node_modules was installed
+      - run: test "$(git rev-parse HEAD)" = "$SHA"
+        env:
+          SHA: ${{needs.jsmodule.outputs.sha}}
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .node-version
-          cache: npm
-      - run: npm ci
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: node_modules-create-pr-branch
+          path: ${{runner.temp}}
+      - run: tar -xf "$RUNNER_TEMP/node_modules.tar"
+
       - run: npm run build
       - run: npm run lint
 
-      - uses: suzuki-shunsuke/release-js-action@ff106e3a3f5b34f174a23db3110031fbf463f15c # v0.2.1
+      # Pull requests from forks can't push branches, so only build them
+      - if: ${{ !github.event.pull_request.head.repo.fork }}
+        uses: suzuki-shunsuke/release-js-action@ff106e3a3f5b34f174a23db3110031fbf463f15c # v0.2.1
         with:
           version: ${{inputs.version}}
           pr: ${{inputs.pr}}
