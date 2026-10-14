@@ -3,20 +3,22 @@ name: autofix.ci
 on: pull_request
 permissions: {}
 jobs:
+  # Don't add jobs to this file. Please add jobs to wc_autofix.yaml.
+  fix:
+    uses: ./.github/workflows/wc_autofix.yaml
+    permissions:
+      contents: read
+      id-token: write
+    secrets:
+      TAKUMI_GUARD_BOT_ID: ${{secrets.TAKUMI_GUARD_BOT_ID}}
   autofix:
+    # Required status check of this workflow
     runs-on: ubuntu-26.04
+    if: always() && (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled'))
+    timeout-minutes: 10
     permissions: {}
-    timeout-minutes: 15
+    needs:
+      - fix
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - run: npm ci
-      - uses: aquaproj/aqua-installer@82d0e83878a8657c4a6f2ff1755d3bfbfc67f329 # v4.1.0
-        with:
-          aqua_version: v2.64.0
-      - run: aqua upc -prune
-        env:
-          AQUA_GITHUB_TOKEN: ${{github.token}}
-      - run: npm run fmt
-      - uses: autofix-ci/action@c5b2d67aa2274e7b5a18224e8171550871fc7e4a # v1.3.4
+      - run: exit 1
+  # Don't add jobs to this file. Please add jobs to wc_autofix.yaml.
