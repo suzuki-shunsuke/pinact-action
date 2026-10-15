@@ -47,12 +47,12 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
       - name: Pin actions
-        uses: suzuki-shunsuke/pinact-action@28aeb220eb3252ad0d4422dd5d9368e925acbd8d # v1.3.0
+        uses: suzuki-shunsuke/pinact-action@896d595f299e71d65b9d28349d6956abe144390a # v3.0.0
         with:
           app_id: ${{vars.APP_ID}}
           app_private_key: ${{secrets.APP_PRIVATE_KEY}}
@@ -61,7 +61,7 @@ jobs:
 ### Use PAT
 
 ```yaml
-uses: suzuki-shunsuke/pinact-action@28aeb220eb3252ad0d4422dd5d9368e925acbd8d # v1.3.0
+uses: suzuki-shunsuke/pinact-action@896d595f299e71d65b9d28349d6956abe144390a # v3.0.0
 with:
   github_token: ${{secrets.BOT_GITHUB_TOKEN}}
 ```
@@ -69,7 +69,7 @@ with:
 ### Using different GitHub Token for creating commits
 
 ```yaml
-uses: suzuki-shunsuke/pinact-action@28aeb220eb3252ad0d4422dd5d9368e925acbd8d # v1.3.0
+uses: suzuki-shunsuke/pinact-action@896d595f299e71d65b9d28349d6956abe144390a # v3.0.0
 with:
   # For pinact run (contents:read for all actions is required)
   github_token: ${{secrets.BOT_GITHUB_TOKEN}}
@@ -84,7 +84,7 @@ If you don't want this action to create a commit, set `skip_push: "true"`.
 By default (`fix: "true"`), pinact fixes the workflow files in the workspace but no commit is created, so you can hand the changes off to a later step (for example, a unified commit step shared with other autofix tools — see [#1002](https://github.com/suzuki-shunsuke/pinact-action/issues/1002)):
 
 ```yaml
-- uses: suzuki-shunsuke/pinact-action@28aeb220eb3252ad0d4422dd5d9368e925acbd8d # v1.3.0
+- uses: suzuki-shunsuke/pinact-action@896d595f299e71d65b9d28349d6956abe144390a # v3.0.0
   with:
     skip_push: "true"
 # ...later in the same job, your own commit/push step
@@ -93,7 +93,7 @@ By default (`fix: "true"`), pinact fixes the workflow files in the workspace but
 If you want validation only (fail the CI when actions aren't pinned, never modify files), set `fix: "false"`. This implies `skip_push: "true"` (nothing was modified, so nothing to commit) so you don't need to set both:
 
 ```yaml
-- uses: suzuki-shunsuke/pinact-action@28aeb220eb3252ad0d4422dd5d9368e925acbd8d # v1.3.0
+- uses: suzuki-shunsuke/pinact-action@896d595f299e71d65b9d28349d6956abe144390a # v3.0.0
   with:
     fix: "false"
 ```
@@ -108,7 +108,7 @@ If you want validation only (fail the CI when actions aren't pinned, never modif
 See also https://github.com/reviewdog/reviewdog
 
 ```yaml
-- uses: suzuki-shunsuke/pinact-action@28aeb220eb3252ad0d4422dd5d9368e925acbd8d # v1.3.0
+- uses: suzuki-shunsuke/pinact-action@896d595f299e71d65b9d28349d6956abe144390a # v3.0.0
   with:
     review: "true"
     github_token: ${{secrets.BOT_GITHUB_TOKEN}}
@@ -124,7 +124,7 @@ You can also use the different access token for review:
 `contents:read` and `pull_requests:write` permissions are required.
 
 ```yaml
-- uses: suzuki-shunsuke/pinact-action@28aeb220eb3252ad0d4422dd5d9368e925acbd8d # v1.3.0
+- uses: suzuki-shunsuke/pinact-action@896d595f299e71d65b9d28349d6956abe144390a # v3.0.0
   with:
     review: "true"
     github_token: ${{secrets.BOT_GITHUB_TOKEN}}
@@ -139,7 +139,7 @@ As of v1.3.0, pinact-action can create commits via [Securefix Action](https://gi
 About Securefix Action, please see the document of Securefix Action.
 
 ```yaml
-- uses: suzuki-shunsuke/pinact-action@28aeb220eb3252ad0d4422dd5d9368e925acbd8d # v1.3.0
+- uses: suzuki-shunsuke/pinact-action@896d595f299e71d65b9d28349d6956abe144390a # v3.0.0
   with:
     securefix_app_id: ${{vars.SECUREFIX_ACTION_CLIENT_APP_ID}}
     securefix_app_private_key: ${{secrets.SECUREFIX_ACTION_CLIENT_APP_PRIVATE_KEY}}
@@ -151,7 +151,7 @@ About Securefix Action, please see the document of Securefix Action.
 These options are optional and map to the corresponding `pinact run` flags.
 
 ```yaml
-- uses: suzuki-shunsuke/pinact-action@28aeb220eb3252ad0d4422dd5d9368e925acbd8d # v1.3.0
+- uses: suzuki-shunsuke/pinact-action@896d595f299e71d65b9d28349d6956abe144390a # v3.0.0
   with:
     skip_push: "true"
     fix: "false" # pinact run --fix (default "true")
@@ -204,7 +204,7 @@ permissions:
   contents: read
 
 steps:
-  - uses: suzuki-shunsuke/pinact-action@v1
+  - uses: suzuki-shunsuke/pinact-action@896d595f299e71d65b9d28349d6956abe144390a # v3.0.0
     with:
       client_id: ${{vars.APP_CLIENT_ID}}
       aws_kms_key_id: ${{vars.KMS_KEY_ID}}
