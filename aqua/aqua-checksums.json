@@ -61,68 +61,68 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/suzuki-shunsuke/pinact/v5.0.0/pinact_darwin_amd64.tar.gz",
-      "checksum": "DA5532BD185A9D3A16A1F93774F835574E0C50BC74C2085B9917B9DF3E9FBBAA",
+      "id": "github_release/github.com/suzuki-shunsuke/pinact/v5.0.2/pinact_darwin_amd64.tar.gz",
+      "checksum": "8FB6A0EE87B59BC2778371527C58A46073D5E289919BBD1C2559EFF7EFEB74E3",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/suzuki-shunsuke/pinact/v5.0.0/pinact_darwin_arm64.tar.gz",
-      "checksum": "3437EBFC9DB720E431E86FD03ED19173B88DCB80B0F177D11A892126108661B5",
+      "id": "github_release/github.com/suzuki-shunsuke/pinact/v5.0.2/pinact_darwin_arm64.tar.gz",
+      "checksum": "9B9545D53376654005DAAEE5AB736D579887205CA3DF99925C8FE8358C6E7FDB",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/suzuki-shunsuke/pinact/v5.0.0/pinact_linux_amd64.tar.gz",
-      "checksum": "D005BBB85DA80DACDC07816F24A5DA723A9F6D1E9F3D3E7E73DF33F9CAA1358F",
+      "id": "github_release/github.com/suzuki-shunsuke/pinact/v5.0.2/pinact_linux_amd64.tar.gz",
+      "checksum": "7F003D8F51E984C2264D2009D430E3E0E87AE404A0E2DC2A9A277B0F731BF5B7",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/suzuki-shunsuke/pinact/v5.0.0/pinact_linux_arm64.tar.gz",
-      "checksum": "D28CA5E9DDD7950DA4A808288F8A83F84FC3CA40E86BAB970F3ADEEF33578C0B",
+      "id": "github_release/github.com/suzuki-shunsuke/pinact/v5.0.2/pinact_linux_arm64.tar.gz",
+      "checksum": "326E27F5B3B5FCA21E6A169B2785BA2023DF3DD9EE82DD0F4E438CB1220B68D7",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/suzuki-shunsuke/pinact/v5.0.0/pinact_windows_amd64.zip",
-      "checksum": "DF2F590F24C2BFE65A35010BFFB4369BA0792C9AFAF7FB324B2330895A37D19F",
+      "id": "github_release/github.com/suzuki-shunsuke/pinact/v5.0.2/pinact_windows_amd64.zip",
+      "checksum": "ABDA382F54A28994E6C7AA220229D5077309DEF0666BFFE0D8D35852BBA54B14",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/suzuki-shunsuke/pinact/v5.0.0/pinact_windows_arm64.zip",
-      "checksum": "E054B2B99230629307172D70DDAB6D6C02CAE9CC5D4E40FB647025A2BDECEFF4",
+      "id": "github_release/github.com/suzuki-shunsuke/pinact/v5.0.2/pinact_windows_arm64.zip",
+      "checksum": "C9935DCDB61BFA0A471B974034E150C29152AE456B545F04A140CBB7CD7FB37D",
       "algorithm": "sha256"
     },
     {
-      "id": "http/nodejs.org/dist/v24.21.0/node-v24.21.0-darwin-arm64.tar.gz",
-      "checksum": "BED7EEA5325E1108F32CE5228DDD6A5F0F08A499EE42AA7442AEA583702F6057",
+      "id": "http/nodejs.org/dist/v24.22.2/node-v24.22.2-darwin-arm64.tar.gz",
+      "checksum": "AA9549349E47DFFAA42DCF95D6E06ADE8C4BDAFC980979883B88767670DF385A",
       "algorithm": "sha256"
     },
     {
-      "id": "http/nodejs.org/dist/v24.21.0/node-v24.21.0-darwin-x64.tar.gz",
-      "checksum": "1462CB3B3046B815CF8EA436D3DA450EC1A9F11DAC7E5A46B0ADA5305D7E8097",
+      "id": "http/nodejs.org/dist/v24.22.2/node-v24.22.2-darwin-x64.tar.gz",
+      "checksum": "D5E336D588C45BE0C37DBD52CC29895593009CA4997A77A1FD02815131ED0E52",
       "algorithm": "sha256"
     },
     {
-      "id": "http/nodejs.org/dist/v24.21.0/node-v24.21.0-linux-arm64.tar.gz",
-      "checksum": "724282C3B43AEC998AA9527380465B45D229E021B58035F5F4F63095EABFE5D5",
+      "id": "http/nodejs.org/dist/v24.22.2/node-v24.22.2-linux-arm64.tar.gz",
+      "checksum": "95C264150ACEB7F3437A29FD6984924F5F8D1511EA3CBD6C508B83F6C555DAE2",
       "algorithm": "sha256"
     },
     {
-      "id": "http/nodejs.org/dist/v24.21.0/node-v24.21.0-linux-x64.tar.gz",
-      "checksum": "6E1DB87EF58B8819E5D5402EFF1536491B18EDD8EB7BEE5EF7897876E88DC5FF",
+      "id": "http/nodejs.org/dist/v24.22.2/node-v24.22.2-linux-x64.tar.gz",
+      "checksum": "361718C444E49AF2CA5A110C83BA6A8901143F23AB285EBBEF0341F391F482A9",
       "algorithm": "sha256"
     },
     {
-      "id": "http/nodejs.org/dist/v24.21.0/node-v24.21.0-win-x64.zip",
-      "checksum": "158F7685B44DE51F6C0DF1D153526CBCD3E1BC739A8DFC607721CEF75DE9E541",
+      "id": "http/nodejs.org/dist/v24.22.2/node-v24.22.2-win-x64.zip",
+      "checksum": "CA1BFF5D8EAD13C9F2EA404A176DB46BD430704D5B5113734049FA365E7799E2",
       "algorithm": "sha256"
     },
     {
-      "id": "http/unofficial-builds.nodejs.org/download/release/v24.21.0/node-v24.21.0-linux-arm64-musl.tar.gz",
-      "checksum": "3048B0811E158CA0D8672B59C839861763E144492980D8D29B369DFEE45747E4",
+      "id": "http/unofficial-builds.nodejs.org/download/release/v24.22.2/node-v24.22.2-linux-arm64-musl.tar.gz",
+      "checksum": "70AFD250A927FBC32F3D95A58597EFDF14AA8AD194E894268F9B8309A2DAB84E",
       "algorithm": "sha256"
     },
     {
-      "id": "http/unofficial-builds.nodejs.org/download/release/v24.21.0/node-v24.21.0-linux-x64-musl.tar.gz",
-      "checksum": "01A713E34DA98E7B4D2A3191EE7CA3F93DD0384D1A2EF23C379B2161EE6E133A",
+      "id": "http/unofficial-builds.nodejs.org/download/release/v24.22.2/node-v24.22.2-linux-x64-musl.tar.gz",
+      "checksum": "867E322D67294E9C405F10CAE5D70ED2E4940BB367FA47DBCB5151C9899D7C04",
       "algorithm": "sha256"
     },
     {
