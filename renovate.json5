@@ -5,6 +5,19 @@
     "github>aquaproj/aqua-renovate-config#2.14.0",
     "github>aquaproj/aqua-renovate-config:file#2.14.0(aqua/imports/.*\\.ya?ml)",
   ],
+  customManagers: [
+    {
+      // The aqua version that the action installs when neither pinact nor
+      // aqua is available on the runner.
+      customType: "regex",
+      managerFilePatterns: ["/^src/run\\.ts$/"],
+      depNameTemplate: "aquaproj/aqua",
+      datasourceTemplate: "github-releases",
+      matchStrings: [
+        '"(?<currentValue>.*)", // renovate: depName=aquaproj/aqua',
+      ],
+    },
+  ],
   packageRules: [
     {
       // @vercel/ncc cannot build with typescript v7. Its bundled ts-loader
