@@ -29,7 +29,7 @@ jobs:
       sha: ${{needs.release.outputs.sha}}
 
   test-js:
-    uses: suzuki-shunsuke/js-action-test-workflow/.github/workflows/test.yaml@8f0b1fefeca5d88fc714b957f9aed1c7e29cae3b # v0.0.1
+    uses: suzuki-shunsuke/js-action-test-workflow/.github/workflows/test.yaml@c834a7dfc9560fb54167eaf33f94eb28f1a4e222 # v0.0.4
     permissions:
       contents: read
       id-token: write
