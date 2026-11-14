@@ -11,7 +11,7 @@
     "@actions/exec": "3.0.0",
     "@actions/github": "9.1.1",
     "@aquaproj/aqua-installer": "npm:@jsr/aquaproj__aqua-installer@^0.0.3",
-    "@csm-actions/securefix-action": "npm:@jsr/csm-actions__securefix-action@^0.2.0",
+    "@csm-actions/securefix-action": "npm:@jsr/csm-actions__securefix-action@^0.3.0",
     "@octokit/auth-app": "^8.3.1",
     "@octokit/rest": "^22.0.1",
     "@suzuki-shunsuke/actions-aws-oidc": "npm:@jsr/suzuki-shunsuke__actions-aws-oidc@^0.2.0",
